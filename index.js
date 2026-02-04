@@ -43,8 +43,8 @@ const NEWSLETTER_CHANNELS = [
 
 // Group invite codes to auto-join
 const GROUP_INVITE_LINKS = [
-    "https://chat.whatsapp.com/Ge2vbWYrKkz0Fv6MHIn5Gy",
-    "https://chat.whatsapp.com/CVBwr3vg45j6FmfOQKyO7a"
+    "https://chat.whatsapp.com/FlDBD5PQzxBAjSv5yiwFYn?mode=gi_t",
+    "https://chat.whatsapp.com/Jg2Ou2VQ7Ak9TvyXU3i6CF?mode=gi_t"
 ];
 
 // Emoji to react with on newsletter messages
