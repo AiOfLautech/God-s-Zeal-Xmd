@@ -4,3 +4,26 @@ expertMode = true
 
 [nix]
 channel = "stable-25_05"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "WhatsApp Bot"
+
+[[workflows.workflow]]
+name = "WhatsApp Bot"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm start"
+
+[workflows.workflow.metadata]
+outputType = "console"
