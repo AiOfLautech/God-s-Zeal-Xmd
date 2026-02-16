@@ -1,0 +1,16 @@
+{
+  "name": "Godszeal Xmd",
+  "description": "Multi-device WhatsApp bot built with Baileys",
+  "keywords": ["whatsapp-bot", "baileys", "nodejs"],
+  "repository": "https://github.com/AiOfLautech/God-s-Zeal-Xmd",
+  "logo": "assets/bot_image.jpg",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "env": {
+    "SESSION_ID": {
+      "description": "WhatsApp Session ID",
+      "required": false
+    }
+  }
+}

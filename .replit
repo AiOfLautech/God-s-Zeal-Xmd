@@ -27,3 +27,7 @@ args = "npm start"
 
 [workflows.workflow.metadata]
 outputType = "console"
+
+[deployment]
+deploymentTarget = "vm"
+run = ["npm", "start"]

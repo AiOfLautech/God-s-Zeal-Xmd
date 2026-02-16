@@ -31,7 +31,13 @@ function formatRam(total, free) {
 
 // Count total commands
 function countCommands() {
-    return 158; // Replace with actual command count
+    const commandsPath = path.join(__dirname, '../commands');
+    try {
+        const files = fs.readdirSync(commandsPath);
+        return files.filter(file => file.endsWith('.js')).length;
+    } catch (error) {
+        return 158;
+    }
 }
 
 // Get mood emoji based on time
