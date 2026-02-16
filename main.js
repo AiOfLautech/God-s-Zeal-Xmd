@@ -371,6 +371,9 @@ async function handleMessages(sock, messageUpdate, printLog) {
         let commandExecuted = false;
 
         switch (true) {
+            case userMessage === ".gcstatus":
+                await gcstatusCommand(sock, chatId, message);
+                break;
             case userMessage === '.simage': {
                 const quotedMessage = message.message?.extendedTextMessage?.contextInfo?.quotedMessage;
                 if (quotedMessage?.stickerMessage) {
