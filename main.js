@@ -371,8 +371,9 @@ async function handleMessages(sock, messageUpdate, printLog) {
         let commandExecuted = false;
 
         switch (true) {
-            case userMessage === ".gcstatus":
-                await gcstatusCommand(sock, chatId, message);
+            case userMessage === ".gcstatus" || userMessage === ".groupstatus" || userMessage === ".gstatus" || userMessage === ".gstat" || userMessage === ".upswgc":
+                const args = rawText.split(/\s+/).slice(1);
+                await gcstatusCommand(sock, chatId, message, args);
                 break;
             case userMessage === '.simage': {
                 const quotedMessage = message.message?.extendedTextMessage?.contextInfo?.quotedMessage;
