@@ -1,7 +1,7 @@
 {
-  "name": "Godszeal Xmd",
-  "description": "Multi-device WhatsApp bot built with Baileys",
-  "keywords": ["whatsapp-bot", "baileys", "nodejs"],
+  "name": "GODSZEAL XMD",
+  "description": "GODSZEAL XMD made for people on Earth",
+  "keywords": ["whatsapp-bot", "baileys", "nodejs", "bot"],
   "repository": "https://github.com/AiOfLautech/God-s-Zeal-Xmd",
   "logo": "assets/bot_image.jpg",
   "scripts": {
@@ -9,7 +9,17 @@
   },
   "env": {
     "SESSION_ID": {
-      "description": "WhatsApp Session ID",
+      "description": "Put session id",
+      "required": true
+    },
+    "PREFIX": {
+      "description": "Bot command prefix, (e.g, . , ! @ etc",
+      "value": ".",
+      "required": true  
+    },
+    "PREMIUM_USERS": {
+      "description": "premium users",
+      "value": "2347049283499",
       "required": false
     }
   }
