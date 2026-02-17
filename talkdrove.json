@@ -4,7 +4,7 @@
   "logo": "assets/bot_image.jpg",
   "keywords": ["bot"],
   "documentation-link": "https://session.talkdrove.com",
-  "owner-verification": "talkdrove@gmail.com",
+  "owner-verification": "godwinhephzibah25@gmail.com",
   "env": {
     "SESSION_ID": {
       "description": "Put session id",
