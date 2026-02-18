@@ -3,7 +3,7 @@
   "description": "GODSZEAL XMD made for people on Earth",
   "logo": "assets/bot_image.jpg",
   "keywords": ["bot"],
-  "documentation-link": "https://session.talkdrove.com",
+  "documentation-link": "https://gzpair.vercel.app",
   "owner-verification": "godwinhephzibah25@gmail.com",
   "env": {
     "SESSION_ID": {
