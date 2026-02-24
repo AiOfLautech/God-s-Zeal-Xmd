@@ -399,6 +399,7 @@ async function startGodszealBotInc() {
         }, 3000)
     }
 
+    const { getDynamicBotImage } = require('./lib/dynamicImage');
     // Connection handling
     GodszealBotInc.ev.on('connection.update', async (s) => {
         const { connection, lastDisconnect } = s
@@ -407,10 +408,11 @@ async function startGodszealBotInc() {
             console.log(chalk.yellow(`🌿Connected to => ` + JSON.stringify(GodszealBotInc.user, null, 2)))
             
             const botNumber = GodszealBotInc.user.id.split(':')[0] + '@s.whatsapp.net';
-            const imagePath = './assets/bot_image.jpg';
-            if (fs.existsSync(imagePath)) {
+            const dynamicImagePath = getDynamicBotImage();
+            
+            if (fs.existsSync(dynamicImagePath)) {
                 await GodszealBotInc.sendMessage(botNumber, { 
-                    image: fs.readFileSync(imagePath),
+                    image: fs.readFileSync(dynamicImagePath),
                     caption: `🤖 Bot Connected Successfully!\n\n⏰ Time: ${new Date().toLocaleString()}\n✅ Status: Online and Ready!\n\n✅Make sure to join below channel`,
                     contextInfo: {
                         forwardingScore: 1,
