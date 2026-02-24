@@ -334,6 +334,26 @@ async function helpCommand(sock, chatId, message) {
 ├◆ .facepalm 
 └ ❏
 
+┌ ❏ *⌜ PHOTOFUNIA COMMANDS ⌟* ❏
+│
+├◆ .pflist - View all effects
+├◆ .pflist <category> - View effects by category
+├◆ .pfsearch <keyword> - Search for effects
+├◆ .love <text> - Love Effect
+├◆ .neon <text> - Neon Writing
+├◆ .fire <text> - Fire Text
+├◆ .blood <text> - Blood Text
+├◆ .smoke <text> - Smoke Effect
+├◆ .carbon <text> - Carbon Text
+├◆ .thunder <text> - Thunder Effect
+├◆ .matrix <text> - Matrix Effect
+├◆ .glitch <text> - Glitch Effect
+├◆ .christmas <text> - Christmas Effect
+├◆ .watercolour <text> - Watercolour Text
+├◆ .painter <text> - Painter Effect
+├◆ And 50+ more effects!
+└ ❏
+
 ┌ ❏ *⌜ GITHUB COMMANDS ⌟* ❏
 │
 ├◆ .git

@@ -143,6 +143,7 @@ const soraCommand = require('./commands/sora');
 const gcstatusCommand = require('./commands/gcstatus');
 const creategcCommand = require('./commands/creategc');
 const addCommand = require('./commands/add');
+const { photofuniaCommand, listEffectsByCategory, listAllCategories, searchEffects } = require('./commands/photofunia');
 
 // Global settings
 global.packname = settings.packname;
@@ -755,6 +756,301 @@ async function handleMessages(sock, messageUpdate, printLog) {
                     break;
                 case userMessage.startsWith('.setgpp'):
                     await setGroupPhoto(sock, chatId, message);
+                    commandExecuted = true;
+                    break;
+                // PhotoFunia Commands
+                case userMessage === '.pflist' || userMessage === '.photofunia':
+                    await listAllCategories(sock, chatId);
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.pflist '):
+                    const pfCategory = rawText.split(/\s+/).slice(1).join(' ');
+                    await listEffectsByCategory(sock, chatId, pfCategory);
+                    commandExecuted = true;
+                    break;
+                case userMessage === '.pfsearch' || userMessage.startsWith('.pfsearch '):
+                    const searchKeyword = rawText.split(/\s+/).slice(1).join(' ');
+                    if (searchKeyword) {
+                        await searchEffects(sock, chatId, searchKeyword);
+                    } else {
+                        await sock.sendMessage(chatId, { text: '❌ Please provide a keyword to search.\n\nExample: .pfsearch neon' });
+                    }
+                    commandExecuted = true;
+                    break;
+                // Dynamic PhotoFunia effects
+                case userMessage.startsWith('.love '):
+                    const loveText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, loveText, 'love');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.cup '):
+                    const cupText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, cupText, 'cup');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.carbon '):
+                    const carbonText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, carbonText, 'carbon');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.write '):
+                    const writeText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, writeText, 'write');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.luxury '):
+                    const luxuryText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, luxuryText, 'luxury');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.blood '):
+                    const bloodText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, bloodText, 'blood');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.neon '):
+                    const neonText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, neonText, 'neon');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.smoke '):
+                    const smokeText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, smokeText, 'smoke');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.ice '):
+                    const iceText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, iceText, 'ice');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.fire '):
+                    const fireText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, fireText, 'fire');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.thunder '):
+                    const thunderText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, thunderText, 'thunder');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.matrix '):
+                    const matrixText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, matrixText, 'matrix');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.hacker '):
+                    const hackerText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, hackerText, 'hacker');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.glitch '):
+                    const glitchText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, glitchText, 'glitch');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.sand '):
+                    const sandText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, sandText, 'sand');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.leaves '):
+                    const leavesText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, leavesText, 'leaves');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.blackpink '):
+                    const blackpinkText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, blackpinkText, 'blackpink');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.purple '):
+                    const purpleText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, purpleText, 'purple');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.devil '):
+                    const devilText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, devilText, 'devil');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.watercolour '):
+                    const watercolourText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, watercolourText, 'watercolour');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.christmas '):
+                    const christmasText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, christmasText, 'christmas');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.metallic '):
+                    const metallicText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, metallicText, 'metallic');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.snow '):
+                    const snowText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, snowText, 'snow');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.impressive '):
+                    const impressiveText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, impressiveText, 'impressive');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.light '):
+                    const lightText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, lightText, 'light');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.arena '):
+                    const arenaText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, arenaText, 'arena');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.1917 '):
+                    const text1917 = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, text1917, '1917');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.countryhome '):
+                    const countryhomeText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, countryhomeText, 'countryhome');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.melbourne '):
+                    const melbourneText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, melbourneText, 'melbourne');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.brussels '):
+                    const brusselsText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, brusselsText, 'brussels');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.rijksmuseum '):
+                    const rijksmuseumText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, rijksmuseumText, 'rijksmuseum');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.gallery '):
+                    const galleryText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, galleryText, 'gallery');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.theframe '):
+                    const theframeText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, theframeText, 'theframe');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.oldtvset '):
+                    const oldtvsetText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, oldtvsetText, 'oldtvset');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.billboard '):
+                    const billboardText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, billboardText, 'billboard');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.timessquare '):
+                    const timessquareText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, timessquareText, 'timessquare');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.broadway '):
+                    const broadwayText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, broadwayText, 'broadway');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.newyork '):
+                    const newyorkText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, newyorkText, 'newyork');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.concrete '):
+                    const concreteText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, concreteText, 'concrete');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.vintage '):
+                    const vintageText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, vintageText, 'vintage');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.valentine '):
+                    const valentineText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, valentineText, 'valentine');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.easter '):
+                    const easterText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, easterText, 'easter');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.halloween '):
+                    const halloweenText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, halloweenText, 'halloween');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.beach '):
+                    const beachText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, beachText, 'beach');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.harley '):
+                    const harleyText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, harleyText, 'harley');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.surfing '):
+                    const surfingText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, surfingText, 'surfing');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.flowers '):
+                    const flowersText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, flowersText, 'flowers');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.balloon '):
+                    const balloonText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, balloonText, 'balloon');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.newspaper '):
+                    const newspaperText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, newspaperText, 'newspaper');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.morningpaper '):
+                    const morningpaperText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, morningpaperText, 'morningpaper');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.calendar '):
+                    const calendarText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, calendarText, 'calendar');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.painter '):
+                    const painterText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, painterText, 'painter');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.heart '):
+                    const heartText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, heartText, 'heart');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.glitter '):
+                    const glitterText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, glitterText, 'glitter');
+                    commandExecuted = true;
+                    break;
+                case userMessage.startsWith('.spark '):
+                    const sparkText = rawText.split(/\s+/).slice(1).join(' ');
+                    await photofuniaCommand(sock, chatId, message, sparkText, 'spark');
                     commandExecuted = true;
                     break;
             }
