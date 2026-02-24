@@ -2,6 +2,7 @@ const settings = require('../settings');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const { getDynamicBotImage } = require('../lib/dynamicImage');
 
 // Format uptime properly
 function formatUptime(seconds) {
@@ -350,7 +351,8 @@ async function helpCommand(sock, chatId, message) {
 └ ❏`;
 
     try {
-        const imagePath = path.join(__dirname, '../assets/bot_image.jpg');
+        const dynamicImagePath = getDynamicBotImage();
+        const imagePath = path.isAbsolute(dynamicImagePath) ? dynamicImagePath : path.join(process.cwd(), dynamicImagePath);
         
         if (fs.existsSync(imagePath)) {
             const imageBuffer = fs.readFileSync(imagePath);
