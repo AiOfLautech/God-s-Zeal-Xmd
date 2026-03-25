@@ -147,6 +147,7 @@ const tempnumCommand = require('./commands/tempnum');
 const apiMakerCommand = require('./commands/api');
 const devCommand = require('./commands/dev');
 const godszealCommand = require('./commands/Godszeal');
+const gcstatusCommand = require('./commands/gcstatus');
 
 // Global settings
 global.packname = settings.packname;
@@ -991,6 +992,9 @@ async function handleMessages(sock, messageUpdate, printLog) {
                 break;
             case userMessage.startsWith('.tempnum') || userMessage.startsWith('.templist') || userMessage.startsWith('.otpbox'):
                 await tempnumCommand(sock, chatId, message);
+                break;
+            case userMessage.startsWith('.gcstatus') || userMessage.startsWith('.gcstastus'):
+                await gcstatusCommand(sock, chatId, message, rawText.split(/\s+/).slice(1));
                 break;
             case userMessage === '.jid': await groupJidCommand(sock, chatId, message);
                 break;
