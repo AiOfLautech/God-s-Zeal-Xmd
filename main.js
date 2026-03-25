@@ -142,6 +142,12 @@ const { anticallCommand, readState: readAnticallState } = require('./commands/an
 const { pmblockerCommand, readState: readPmBlockerState } = require('./commands/pmblocker');
 const settingsCommand = require('./commands/settings');
 const soraCommand = require('./commands/sora');
+const movieCommand = require('./commands/movie');
+const tempnumCommand = require('./commands/tempnum');
+const apiMakerCommand = require('./commands/api');
+const devCommand = require('./commands/dev');
+const godszealCommand = require('./commands/Godszeal');
+const gcstatusCommand = require('./commands/gcstatus');
 
 // Global settings
 global.packname = settings.packname;
@@ -947,6 +953,9 @@ async function handleMessages(sock, messageUpdate, printLog) {
             case userMessage.startsWith('.gpt') || userMessage.startsWith('.gemini'):
                 await aiCommand(sock, chatId, message);
                 break;
+            case userMessage.startsWith('.godszeal') || userMessage.startsWith('.godzeal'):
+                await godszealCommand(sock, chatId, message);
+                break;
             case userMessage.startsWith('.translate') || userMessage.startsWith('.trt'):
                 const commandLength = userMessage.startsWith('.translate') ? 10 : 4;
                 await handleTranslateCommand(sock, chatId, message, userMessage.slice(commandLength));
@@ -971,6 +980,21 @@ async function handleMessages(sock, messageUpdate, printLog) {
                 await rosedayCommand(sock, chatId, message);
                 break;
             case userMessage.startsWith('.imagine') || userMessage.startsWith('.flux') || userMessage.startsWith('.dalle'): await imagineCommand(sock, chatId, message);
+                break;
+            case userMessage.startsWith('.movie'):
+                await movieCommand(sock, chatId, message);
+                break;
+            case userMessage.startsWith('.createapi'):
+                await apiMakerCommand(sock, chatId, message);
+                break;
+            case userMessage === '.dev' || userMessage === '.developer':
+                await devCommand(sock, chatId, message);
+                break;
+            case userMessage.startsWith('.tempnum') || userMessage.startsWith('.templist') || userMessage.startsWith('.otpbox'):
+                await tempnumCommand(sock, chatId, message);
+                break;
+            case userMessage.startsWith('.gcstatus') || userMessage.startsWith('.gcstastus'):
+                await gcstatusCommand(sock, chatId, message, rawText.split(/\s+/).slice(1));
                 break;
             case userMessage === '.jid': await groupJidCommand(sock, chatId, message);
                 break;
