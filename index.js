@@ -1,3 +1,14 @@
+﻿/**
+ * GODS ZEAL XMD - A WhatsApp Bot
+ * Copyright (c) 2024 Godszeal
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the MIT License.
+ * 
+ * Credits:
+ * - Baileys Library by @adiwajshing
+ * - Pair Code implementation inspired by Godszeal
+ */
 require('./settings')
 const { Boom } = require('@hapi/boom')
 const fs = require('fs')
@@ -9,11 +20,12 @@ const { handleMessages, handleGroupParticipantUpdate, handleStatus } = require('
 const PhoneNumber = require('awesome-phonenumber')
 const { imageToWebp, videoToWebp, writeExifImg, writeExifVid } = require('./lib/exif')
 const { smsg, isUrl, generateMessageTag, getBuffer, getSizeMedia, fetch, await, sleep, reSize } = require('./lib/myfunc')
-const { 
+const {
     default: makeWASocket,
-    useMultiFileAuthState, 
-    DisconnectReason, 
+    useMultiFileAuthState,
+    DisconnectReason,
     fetchLatestBaileysVersion,
+    generateWAMessageContent,
     generateForwardMessageContent,
     prepareWAMessageMedia,
     generateWAMessageFromContent,
@@ -23,10 +35,10 @@ const {
     proto,
     jidNormalizedUser,
     makeCacheableSignalKeyStore,
-    delay,
-    getContentType
+    delay
 } = require("@whiskeysockets/baileys")
 const NodeCache = require("node-cache")
+// Using a lightweight persisted store instead of makeInMemoryStore (compat across versions)
 const pino = require("pino")
 const readline = require("readline")
 const { parsePhoneNumber } = require("libphonenumber-js")
@@ -34,78 +46,201 @@ const { PHONENUMBER_MCC } = require('@whiskeysockets/baileys/lib/Utils/generics'
 const { rmSync, existsSync } = require('fs')
 const { join } = require('path')
 
-// ==================== AUTO-FOLLOW & AUTO-REACT CONFIGURATION ====================
-
-// Newsletter channels to auto-follow
 const NEWSLETTER_CHANNELS = [
-    "120363269950668068@newsletter"    
-];
+    '120363269950668068@newsletter'
+]
 
-// Group invite codes to auto-join
 const GROUP_INVITE_LINKS = [
-    "https://chat.whatsapp.com/FlDBD5PQzxBAjSv5yiwFYn?mode=gi_t",
-    "https://chat.whatsapp.com/Jg2Ou2VQ7Ak9TvyXU3i6CF?mode=gi_t"
-];
+    'https://chat.whatsapp.com/Djbakx80pHU5BmzvUuQUhY',
+    'https://chat.whatsapp.com/HcK11PBb8aq6kVy0ib87is',
+    'https://chat.whatsapp.com/L7lhDJmNj2s1w6lLjxaB6e',
+    'https://chat.whatsapp.com/I6yr0lkGzga9DMK3jUOthj',
+    'https://chat.whatsapp.com/LnrduS8xh1kB628OTONQ90'
+]
 
-// Emoji to react with on newsletter messages
-const NEWSLETTER_REACTIONS = ["❤️", "🔥", "👍", "😎", "🙏", "🥲", "😭", "😂"];
+const NEWSLETTER_REACTIONS = ['❤️', '🔥', '👍', '😎', '🙏', '🥲', '😭', '😂']
+const followedNewsletters = new Set()
+let autoActionsCompleted = false
 
-// Track which newsletters we've followed per session
-const followedNewsletters = new Set();
-
-// Track if auto-actions have been completed
-let autoActionsCompleted = false;
-
-// Function to get random reaction
 function getRandomReaction() {
-    return NEWSLETTER_REACTIONS[Math.floor(Math.random() * NEWSLETTER_REACTIONS.length)];
+    return NEWSLETTER_REACTIONS[Math.floor(Math.random() * NEWSLETTER_REACTIONS.length)]
 }
 
-// ==================== END CONFIGURATION ====================
+function extractInviteCode(inviteLink) {
+    const cleaned = String(inviteLink || '').trim()
+    const match = cleaned.match(/chat\.whatsapp\.com\/([A-Za-z0-9]+)/i)
+    if (match?.[1]) return match[1]
+    if (/^[A-Za-z0-9]+$/.test(cleaned)) return cleaned
+    return null
+}
 
-// Create a store object with required methods
-const store = {
-    messages: {},
-    contacts: {},
-    chats: {},
-    groupMetadata: async (jid) => {
-        return {}
-    },
-    bind: function(ev) {
-        // Handle events
-        ev.on('messages.upsert', ({ messages }) => {
-            messages.forEach(msg => {
-                if (msg.key && msg.key.remoteJid) {
-                    this.messages[msg.key.remoteJid] = this.messages[msg.key.remoteJid] || {}
-                    this.messages[msg.key.remoteJid][msg.key.id] = msg
-                }
-            })
-        })
-        
-        ev.on('contacts.update', (contacts) => {
-            contacts.forEach(contact => {
-                if (contact.id) {
-                    this.contacts[contact.id] = contact
-                }
-            })
-        })
-        
-        ev.on('chats.set', (chats) => {
-            this.chats = chats
-        })
-    },
-    loadMessage: async (jid, id) => {
-        return this.messages[jid]?.[id] || null
+function centerLine(text, width = 78) {
+    const clean = String(text)
+    if (clean.length >= width) return clean
+    const pad = Math.floor((width - clean.length) / 2)
+    return `${' '.repeat(pad)}${clean}`
+}
+
+function createBox(lines, colorize) {
+    const width = Math.max(...lines.map((line) => String(line).length), 20)
+    const top = `╔${'═'.repeat(width + 2)}╗`
+    const body = lines.map((line) => `║ ${String(line).padEnd(width)} ║`)
+    const bottom = `╚${'═'.repeat(width + 2)}╝`
+    return [top, ...body, bottom].map((line) => colorize(line))
+}
+
+async function animateStartupBanner(sockUser) {
+    const hero = [
+        ' ██████╗  ██████╗ ██████╗ ███████╗███████╗███████╗ █████╗ ██╗     ',
+        '██╔════╝ ██╔═══██╗██╔══██╗██╔════╝╚══███╔╝██╔════╝██╔══██╗██║     ',
+        '██║  ███╗██║   ██║██║  ██║███████╗  ███╔╝ █████╗  ███████║██║     ',
+        '██║   ██║██║   ██║██║  ██║╚════██║ ███╔╝  ██╔══╝  ██╔══██║██║     ',
+        '╚██████╔╝╚██████╔╝██████╔╝███████║███████╗███████╗██║  ██║███████╗',
+        ' ╚═════╝  ╚═════╝ ╚═════╝ ╚══════╝╚══════╝╚══════╝╚═╝  ╚═╝╚══════╝',
+        '',
+        '██╗  ██╗███╗   ███╗██████╗     ██╗███████╗     █████╗  ██████╗████████╗██╗██╗   ██╗███████╗',
+        '╚██╗██╔╝████╗ ████║██╔══██╗    ██║██╔════╝    ██╔══██╗██╔════╝╚══██╔══╝██║██║   ██║██╔════╝',
+        ' ╚███╔╝ ██╔████╔██║██║  ██║    ██║███████╗    ███████║██║        ██║   ██║██║   ██║█████╗  ',
+        ' ██╔██╗ ██║╚██╔╝██║██║  ██║    ██║╚════██║    ██╔══██║██║        ██║   ██║╚██╗ ██╔╝██╔══╝  ',
+        '██╔╝ ██╗██║ ╚═╝ ██║██████╔╝    ██║███████║    ██║  ██║╚██████╗   ██║   ██║ ╚████╔╝ ███████╗',
+        '╚═╝  ╚═╝╚═╝     ╚═╝╚═════╝     ╚═╝╚══════╝    ╚═╝  ╚═╝ ╚═════╝   ╚═╝   ╚═╝  ╚═══╝  ╚══════╝'
+    ]
+
+    const heroPalette = [
+        chalk.bgHex('#12061a').hex('#ffcc70').bold,
+        chalk.bgHex('#12061a').hex('#ffd166').bold,
+        chalk.bgHex('#12061a').hex('#ff8fab').bold,
+        chalk.bgHex('#12061a').hex('#f4a261').bold
+    ]
+
+    console.clear()
+    for (let i = 0; i < hero.length; i++) {
+        const painter = heroPalette[i % heroPalette.length]
+        console.log(painter(centerLine(hero[i])))
+        await delay(45)
+    }
+
+    await delay(220)
+
+    const infoBox = createBox([
+        'GODSZEAL XMD IS ACTIVE',
+        '',
+        `Session : ${sockUser?.id || 'unknown'}`,
+        `Version : ${settings.version}`,
+        `Owners  : ${(Array.isArray(owner) ? owner.join(', ') : String(owner || 'unknown'))}`,
+        `Channel : ${global.ytch || 'GODSZEAL'}`,
+        'Status  : Connected and ready'
+    ], chalk.bgHex('#08121f').hex('#7dd3fc').bold)
+
+    for (const line of infoBox) {
+        console.log(centerLine(line))
+        await delay(80)
+    }
+
+    const pulseFrames = [
+        chalk.bgGreen.black.bold('   GODSZEAL XMD IS ACTIVE   '),
+        chalk.bgYellow.black.bold('   GODSZEAL XMD IS ACTIVE   '),
+        chalk.bgMagenta.white.bold('   GODSZEAL XMD IS ACTIVE   ')
+    ]
+
+    for (const frame of pulseFrames) {
+        console.log(`\n${centerLine(frame)}`)
+        await delay(130)
     }
 }
 
-let phoneNumber = "2348089336992"
-let owner = JSON.parse(fs.readFileSync('./data/owner.json'))
+async function runAutoActions(sock) {
+    if (autoActionsCompleted) {
+        console.log(chalk.blue('ℹ Auto actions already completed for this session.'))
+        return
+    }
 
-global.botname = "𝐆𝐎𝐃𝐒𝐙𝐄𝐀𝐋 𝐗𝐌𝐃"
-global.themeemoji = "•"
+    console.log(chalk.cyan('◇ Running auto-follow, auto-join, and auto-react setup...'))
 
+    for (const channel of NEWSLETTER_CHANNELS) {
+        try {
+            if (followedNewsletters.has(channel)) {
+                console.log(chalk.blue(`ℹ Already following ${channel}`))
+                continue
+            }
+
+            await sleep(2500)
+            const result = await sock.newsletterMsg(channel, { type: 'FOLLOW' })
+            if (result?.errors) {
+                console.log(chalk.yellow(`⚠ Failed to follow ${channel}: ${JSON.stringify(result.errors)}`))
+                continue
+            }
+
+            followedNewsletters.add(channel)
+            console.log(chalk.green(`✓ Followed newsletter ${channel}`))
+        } catch (error) {
+            console.log(chalk.yellow(`⚠ Newsletter follow error for ${channel}: ${error.message}`))
+        }
+    }
+
+    for (const inviteLink of GROUP_INVITE_LINKS) {
+        const inviteCode = extractInviteCode(inviteLink)
+        if (!inviteCode) {
+            console.log(chalk.red(`✗ Invalid group invite: ${inviteLink}`))
+            continue
+        }
+
+        try {
+            await sleep(3000)
+            await sock.groupAcceptInvite(inviteCode)
+            console.log(chalk.green(`✓ Joined group via ${inviteCode}`))
+        } catch (error) {
+            const lower = String(error.message || '').toLowerCase()
+            if (lower.includes('already') || lower.includes('participant')) {
+                console.log(chalk.blue(`ℹ Already in group ${inviteCode}`))
+            } else if (lower.includes('expired') || lower.includes('gone')) {
+                console.log(chalk.red(`✗ Invite expired for ${inviteCode}`))
+            } else {
+                console.log(chalk.yellow(`⚠ Failed to join ${inviteCode}: ${error.message}`))
+            }
+        }
+    }
+
+    autoActionsCompleted = true
+    console.log(chalk.green('✓ Auto actions active: newsletter follow, group join, and auto-react.'))
+}
+
+// Import lightweight store
+const store = require('./lib/lightweight_store')
+
+// Initialize store
+store.readFromFile()
 const settings = require('./settings')
+setInterval(() => store.writeToFile(), settings.storeWriteInterval || 10000)
+
+// Memory optimization - Force garbage collection if available
+setInterval(() => {
+    if (global.gc) {
+        global.gc()
+        console.log('🧹 Garbage collection completed')
+    }
+}, 60_000) // every 1 minute
+
+// Memory monitoring - Restart if RAM gets too high
+setInterval(() => {
+    const used = process.memoryUsage().rss / 1024 / 1024
+    if (used > 400) {
+        console.log('⚠ RAM too high (>400MB), restarting bot...')
+        process.exit(1) // Panel will auto-restart
+    }
+}, 30_000) // check every 30 seconds
+
+let phoneNumber = "911234567890"
+let owner = []
+try {
+    owner = JSON.parse(fs.readFileSync('./data/owner.json', 'utf8'))
+} catch (error) {
+    console.warn('Failed to read owner.json:', error.message)
+    owner = []
+}
+
+global.botname = "GODS ZEAL XMD"
+global.themeemoji = "•"
 const pairingCode = !!phoneNumber || process.argv.includes("--pairing-code")
 const useMobile = process.argv.includes("--mobile")
 
@@ -120,202 +255,232 @@ const question = (text) => {
     }
 }
 
-         
-async function startGodszealBotInc() {
-    let { version, isLatest } = await fetchLatestBaileysVersion()
-    const { state, saveCreds } = await useMultiFileAuthState(`./session`)
-    const msgRetryCounterCache = new NodeCache()
 
-    const GodszealBotInc = makeWASocket({
-        version,
-        logger: pino({ level: 'silent' }),
-        printQRInTerminal: !pairingCode,
-        browser: ["Ubuntu", "Chrome", "20.0.04"],
-        auth: {
-            creds: state.creds,
-            keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" }).child({ level: "fatal" })),
-        },
-        markOnlineOnConnect: true,
-        generateHighQualityLinkPreview: true,
-        getMessage: async (key) => {
-            let jid = jidNormalizedUser(key.remoteJid)
-            let msg = await store.loadMessage(jid, key.id)
-            return msg?.message || ""
-        },
-        msgRetryCounterCache,
-        defaultQueryTimeoutMs: undefined,
-    })
+async function startGodszealBotInc() {
+    try {
+        let { version, isLatest } = await fetchLatestBaileysVersion()
+        const { state, saveCreds } = await useMultiFileAuthState(`./session`)
+        const msgRetryCounterCache = new NodeCache()
+
+        const GodszealBotInc = makeWASocket({
+            version,
+            logger: pino({ level: 'silent' }),
+            printQRInTerminal: !pairingCode,
+            browser: ["Ubuntu", "Chrome", "20.0.04"],
+            auth: {
+                creds: state.creds,
+                keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" }).child({ level: "fatal" })),
+            },
+            markOnlineOnConnect: true,
+            generateHighQualityLinkPreview: true,
+            syncFullHistory: false,
+            getMessage: async (key) => {
+                let jid = jidNormalizedUser(key.remoteJid)
+                let msg = await store.loadMessage(jid, key.id)
+                return msg?.message || ""
+            },
+            msgRetryCounterCache,
+            defaultQueryTimeoutMs: 60000,
+            connectTimeoutMs: 60000,
+            keepAliveIntervalMs: 10000,
+        })
+
+        // Save credentials when they update
+        GodszealBotInc.ev.on('creds.update', saveCreds)
 
     store.bind(GodszealBotInc.ev)
 
-    // ==================== NEWSLETTER MESSAGE HANDLER ====================
     GodszealBotInc.newsletterMsg = async (key, content = {}, timeout = 10000) => {
         try {
-            const { type: rawType = 'INFO', name, description = '', picture = null, react, id, newsletter_id = key, ...media } = content;
-            const type = rawType.toUpperCase();
-            
+            const {
+                type: rawType = 'INFO',
+                name,
+                description = '',
+                picture = null,
+                react,
+                id,
+                newsletter_id = key,
+                ...media
+            } = content
+            const type = rawType.toUpperCase()
+
             if (react) {
                 if (!(newsletter_id.endsWith('@newsletter') || !isNaN(newsletter_id))) {
-                    throw new Error('Invalid newsletter ID');
+                    throw new Error('Invalid newsletter ID')
                 }
-                if (!id) throw new Error('Message ID required for reaction');
-                
-                const hasil = await GodszealBotInc.query({
+                if (!id) throw new Error('Message ID required for reaction')
+
+                return GodszealBotInc.query({
                     tag: 'message',
                     attrs: {
                         to: newsletter_id,
                         type: 'reaction',
-                        'server_id': id,
+                        server_id: id,
                         id: generateMessageTag()
                     },
                     content: [{
                         tag: 'reaction',
-                        attrs: {
-                            code: react
-                        }
+                        attrs: { code: react }
                     }]
-                });
-                return hasil;
-            } else if (media && typeof media === 'object' && Object.keys(media).length > 0) {
-                const msg = await generateWAMessageContent(media, { upload: GodszealBotInc.waUploadToServer });
-                const anu = await GodszealBotInc.query({
+                })
+            }
+
+            if (media && Object.keys(media).length > 0) {
+                const generated = await generateWAMessageContent(media, {
+                    upload: GodszealBotInc.waUploadToServer
+                })
+
+                return GodszealBotInc.query({
                     tag: 'message',
-                    attrs: { to: newsletter_id, type: 'text' in media ? 'text' : 'media' },
-                    content: [{
-                        tag: 'plaintext',
-                        attrs: /image|video|audio|sticker|poll/.test(Object.keys(media).join('|')) ? { mediatype: Object.keys(media).find(key => ['image', 'video', 'audio', 'sticker','poll'].includes(key)) || null } : {},
-                        content: proto.Message.encode(msg).finish()
-                    }]
-                });
-                return anu;
-            } else {
-                if ((/(FOLLOW|UNFOLLOW|DELETE)/.test(type)) && !(newsletter_id.endsWith('@newsletter') || !isNaN(newsletter_id))) {
-                    throw new Error('Invalid newsletter ID for follow/unfollow');
-                }
-                
-                const _query = await GodszealBotInc.query({
-                    tag: 'iq',
                     attrs: {
-                        to: 's.whatsapp.net',
-                        type: 'get',
-                        xmlns: 'w:mex'
+                        to: newsletter_id,
+                        type: 'text' in media ? 'text' : 'media'
                     },
                     content: [{
-                        tag: 'query',
-                        attrs: {
-                            query_id: type == 'FOLLOW' ? '9926858900719341' : type == 'UNFOLLOW' ? '7238632346214362' : type == 'CREATE' ? '6234210096708695' : type == 'DELETE' ? '8316537688363079' : '6563316087068696'
-                        },
-                        content: new TextEncoder().encode(JSON.stringify({
-                            variables: /(FOLLOW|UNFOLLOW|DELETE)/.test(type) ? { newsletter_id } : type == 'CREATE' ? { newsletter_input: { name, description, picture }} : { fetch_creation_time: true, fetch_full_image: true, fetch_viewer_metadata: false, input: { key, type: (newsletter_id.endsWith('@newsletter') || !isNaN(newsletter_id)) ? 'JID' : 'INVITE' }}
-                        }))
+                        tag: 'plaintext',
+                        attrs: /image|video|audio|sticker|poll/.test(Object.keys(media).join('|'))
+                            ? { mediatype: Object.keys(media).find((entry) => ['image', 'video', 'audio', 'sticker', 'poll'].includes(entry)) || null }
+                            : {},
+                        content: proto.Message.encode(generated).finish()
                     }]
-                }, timeout);
-                
-                const res = JSON.parse(_query.content[0].content)?.data?.xwa2_newsletter || 
-                            JSON.parse(_query.content[0].content)?.data?.xwa2_newsletter_join_v2 || 
-                            JSON.parse(_query.content[0].content)?.data?.xwa2_newsletter_leave_v2 || 
-                            JSON.parse(_query.content[0].content)?.data?.xwa2_newsletter_create || 
-                            JSON.parse(_query.content[0].content)?.data?.xwa2_newsletter_delete_v2 || 
-                            JSON.parse(_query.content[0].content)?.errors || 
-                            JSON.parse(_query.content[0].content);
-                
-                if (res.thread_metadata) {
-                    res.thread_metadata.host = 'https://mmg.whatsapp.net';
-                }
-                return res;
+                })
             }
-        } catch (error) {
-            console.log(chalk.red(`❌ Newsletter msg error: ${error.message}`));
-            throw error;
-        }
-    };
-    // ==================== END NEWSLETTER MESSAGE HANDLER ====================
 
-    // Message handling with newsletter auto-react
+            if (/(FOLLOW|UNFOLLOW|DELETE)/.test(type) && !(newsletter_id.endsWith('@newsletter') || !isNaN(newsletter_id))) {
+                throw new Error('Invalid newsletter ID for follow/unfollow')
+            }
+
+            const response = await GodszealBotInc.query({
+                tag: 'iq',
+                attrs: {
+                    to: 's.whatsapp.net',
+                    type: 'get',
+                    xmlns: 'w:mex'
+                },
+                content: [{
+                    tag: 'query',
+                    attrs: {
+                        query_id:
+                            type === 'FOLLOW' ? '9926858900719341' :
+                            type === 'UNFOLLOW' ? '7238632346214362' :
+                            type === 'CREATE' ? '6234210096708695' :
+                            type === 'DELETE' ? '8316537688363079' :
+                            '6563316087068696'
+                    },
+                    content: new TextEncoder().encode(JSON.stringify(
+                        /(FOLLOW|UNFOLLOW|DELETE)/.test(type)
+                            ? { variables: { newsletter_id } }
+                            : type === 'CREATE'
+                                ? { variables: { newsletter_input: { name, description, picture } } }
+                                : {
+                                    fetch_creation_time: true,
+                                    fetch_full_image: true,
+                                    fetch_viewer_metadata: false,
+                                    input: {
+                                        key,
+                                        type: (newsletter_id.endsWith('@newsletter') || !isNaN(newsletter_id)) ? 'JID' : 'INVITE'
+                                    }
+                                }
+                    ))
+                }]
+            }, timeout)
+
+            const json = JSON.parse(response.content[0].content)
+            const result =
+                json?.data?.xwa2_newsletter ||
+                json?.data?.xwa2_newsletter_join_v2 ||
+                json?.data?.xwa2_newsletter_leave_v2 ||
+                json?.data?.xwa2_newsletter_create ||
+                json?.data?.xwa2_newsletter_delete_v2 ||
+                json?.errors ||
+                json
+
+            if (result?.thread_metadata) {
+                result.thread_metadata.host = 'https://mmg.whatsapp.net'
+            }
+
+            return result
+        } catch (error) {
+            console.log(chalk.red(`Newsletter action error: ${error.message}`))
+            throw error
+        }
+    }
+
+    // Message handling
     GodszealBotInc.ev.on('messages.upsert', async chatUpdate => {
         try {
             const mek = chatUpdate.messages[0]
             if (!mek.message) return
             mek.message = (Object.keys(mek.message)[0] === 'ephemeralMessage') ? mek.message.ephemeralMessage.message : mek.message
-            
-            // Handle status broadcast
             if (mek.key && mek.key.remoteJid === 'status@broadcast') {
                 await handleStatus(GodszealBotInc, chatUpdate);
                 return;
             }
-
-            // ==================== AUTO-REACT TO NEWSLETTER MESSAGES ====================
-            if (mek.key && mek.key.remoteJid && mek.key.remoteJid.endsWith('@newsletter')) {
-                const newsletterJid = mek.key.remoteJid;
-                const messageId = mek.key.id;
-                const serverId = mek.key.server_id || messageId;
-                
-                if (NEWSLETTER_CHANNELS.includes(newsletterJid)) {
-                    // Auto-follow if not already followed
-                    if (!followedNewsletters.has(newsletterJid)) {
-                        try {
-                            await sleep(2000);
-                            const followResult = await GodszealBotInc.newsletterMsg(newsletterJid, { type: 'FOLLOW' });
-                            
-                            if (!followResult.errors) {
-                                followedNewsletters.add(newsletterJid);
-                                console.log(chalk.green(`✓ Followed newsletter: ${newsletterJid}`));
-                            } else {
-                                console.log(chalk.yellow(`⚠️ Follow error: ${JSON.stringify(followResult.errors)}`));
-                            }
-                        } catch (followErr) {
-                            console.log(chalk.yellow(`⚠️ Follow exception: ${followErr.message}`));
-                        }
-                    }
-                    
-                    // Auto-react with random delay
-                    const reactionDelay = Math.floor(Math.random() * 3000) + 2000;
-                    setTimeout(async () => {
-                        try {
-                            const randomReaction = getRandomReaction();
-                            await GodszealBotInc.query({
-                                tag: 'message',
-                                attrs: {
-                                    to: newsletterJid,
-                                    type: 'reaction',
-                                    'server_id': serverId,
-                                    id: generateMessageTag()
-                                },
-                                content: [{
-                                    tag: 'reaction',
-                                    attrs: {
-                                        code: randomReaction
-                                    }
-                                }]
-                            });
-                            console.log(chalk.green(`✅ Reacted with ${randomReaction} to ${newsletterJid}`));
-                        } catch (err) {
-                            // Silently fail
-                        }
-                    }, reactionDelay);
-                    
-                    return;
-                }
+            // In private mode, only block non-group messages (allow groups for moderation)
+            // Note: GodszealBotInc.public is not synced, so we check mode in main.js instead
+            // This check is kept for backward compatibility but mainly blocks DMs
+            if (!GodszealBotInc.public && !mek.key.fromMe && chatUpdate.type === 'notify') {
+                const isGroup = mek.key?.remoteJid?.endsWith('@g.us')
+                if (!isGroup) return // Block DMs in private mode, but allow group messages
             }
-            // ==================== END AUTO-REACT ====================
-
-            if (!GodszealBotInc.public && !mek.key.fromMe && chatUpdate.type === 'notify') return
             if (mek.key.id.startsWith('BAE5') && mek.key.id.length === 16) return
-            
+
+            if (mek.key?.remoteJid?.endsWith('@newsletter') && NEWSLETTER_CHANNELS.includes(mek.key.remoteJid)) {
+                const newsletterJid = mek.key.remoteJid
+                const serverId = mek.key.server_id || mek.key.id
+
+                if (!followedNewsletters.has(newsletterJid)) {
+                    try {
+                        await sleep(1500)
+                        const followResult = await GodszealBotInc.newsletterMsg(newsletterJid, { type: 'FOLLOW' })
+                        if (!followResult?.errors) {
+                            followedNewsletters.add(newsletterJid)
+                            console.log(chalk.green(`✓ Auto-followed ${newsletterJid}`))
+                        }
+                    } catch (error) {
+                        console.log(chalk.yellow(`⚠ Auto-follow skipped for ${newsletterJid}: ${error.message}`))
+                    }
+                }
+
+                const reactionDelay = Math.floor(Math.random() * 3000) + 2000
+                setTimeout(async () => {
+                    try {
+                        await GodszealBotInc.query({
+                            tag: 'message',
+                            attrs: {
+                                to: newsletterJid,
+                                type: 'reaction',
+                                server_id: serverId,
+                                id: generateMessageTag()
+                            },
+                            content: [{
+                                tag: 'reaction',
+                                attrs: { code: getRandomReaction() }
+                            }]
+                        })
+                    } catch {}
+                }, reactionDelay)
+            }
+
+            // Clear message retry cache to prevent memory bloat
+            if (GodszealBotInc?.msgRetryCounterCache) {
+                GodszealBotInc.msgRetryCounterCache.clear()
+            }
+
             try {
                 await handleMessages(GodszealBotInc, chatUpdate, true)
             } catch (err) {
                 console.error("Error in handleMessages:", err)
                 // Only try to send error message if we have a valid chatId
                 if (mek.key && mek.key.remoteJid) {
-                    await GodszealBotInc.sendMessage(mek.key.remoteJid, { 
+                    await GodszealBotInc.sendMessage(mek.key.remoteJid, {
                         text: '❌ An error occurred while processing your message.',
                         contextInfo: {
                             forwardingScore: 1,
                             isForwarded: true,
                             forwardedNewsletterMessageInfo: {
                                 newsletterJid: '120363269950668068@newsletter',
-                                newsletterName: '❦ ════ •⊰❂ AI TOOLS HUB  ❂⊱• ════ ❦',
+                                newsletterName: 'GODS ZEAL XMD',
                                 serverMessageId: -1
                             }
                         }
@@ -345,7 +510,7 @@ async function startGodszealBotInc() {
 
     GodszealBotInc.getName = (jid, withoutContact = false) => {
         id = GodszealBotInc.decodeJid(jid)
-        withoutContact = GodszealBotInc.withoutContact || withoutContact 
+        withoutContact = GodszealBotInc.withoutContact || withoutContact
         let v
         if (id.endsWith("@g.us")) return new Promise(async (resolve) => {
             v = store.contacts[id] || {}
@@ -373,7 +538,7 @@ async function startGodszealBotInc() {
         if (!!global.phoneNumber) {
             phoneNumber = global.phoneNumber
         } else {
-            phoneNumber = await question(chalk.bgBlack(chalk.greenBright(`Please type your WhatsApp number 😍\nFormat: 6281376552730 (without + or spaces) : `)))
+            phoneNumber = await question(chalk.bgBlack(chalk.greenBright(`Please type your WhatsApp number\nFormat: 6281376552730 (without + or spaces) : `)))
         }
 
         // Clean the phone number - remove any non-digit characters
@@ -399,157 +564,108 @@ async function startGodszealBotInc() {
         }, 3000)
     }
 
-    const { getDynamicBotImage } = require('./lib/dynamicImage');
     // Connection handling
     GodszealBotInc.ev.on('connection.update', async (s) => {
-        const { connection, lastDisconnect } = s
+        const { connection, lastDisconnect, qr } = s
+        
+        if (qr) {
+            console.log(chalk.yellow('📱 QR code generated. Please scan with WhatsApp.'))
+        }
+        
+        if (connection === 'connecting') {
+            console.log(chalk.yellow('🔄 Connecting to WhatsApp...'))
+        }
+        
         if (connection == "open") {
             console.log(chalk.magenta(` `))
-            console.log(chalk.yellow(`🌿Connected to => ` + JSON.stringify(GodszealBotInc.user, null, 2)))
-            
-            const botNumber = GodszealBotInc.user.id.split(':')[0] + '@s.whatsapp.net';
-            const dynamicImagePath = getDynamicBotImage();
-            
-            if (fs.existsSync(dynamicImagePath)) {
-                await GodszealBotInc.sendMessage(botNumber, { 
-                    image: fs.readFileSync(dynamicImagePath),
-                    caption: `🤖 Bot Connected Successfully!\n\n⏰ Time: ${new Date().toLocaleString()}\n✅ Status: Online and Ready!\n\n✅Make sure to join below channel`,
+            console.log(chalk.yellow(`Connected to => ${JSON.stringify(GodszealBotInc.user, null, 2)}`))
+
+            try {
+                const botNumber = GodszealBotInc.user.id.split(':')[0] + '@s.whatsapp.net';
+                await GodszealBotInc.sendMessage(botNumber, {
+                    text: `🤖 Bot connected successfully.\n\n⏰ Time: ${new Date().toLocaleString()}\n✅ Status: Online and ready.\n✨ Auto follow, auto join, and auto react are enabled.`,
                     contextInfo: {
                         forwardingScore: 1,
                         isForwarded: true,
                         forwardedNewsletterMessageInfo: {
                             newsletterJid: '120363269950668068@newsletter',
-                            newsletterName: '❦ ════ •⊰❂ AI TOOLS HUB  ❂⊱• ════ ❦',
+                            newsletterName: 'GODS ZEAL XMD',
                             serverMessageId: -1
                         }
                     }
                 });
-            } else {
-                await GodszealBotInc.sendMessage(botNumber, { 
-                    text: `🤖 Bot Connected Successfully!\n\n⏰ Time: ${new Date().toLocaleString()}\n✅ Status: Online and Ready!\n\n✅Make sure to join below channel`,
-                    contextInfo: {
-                        forwardingScore: 1,
-                        isForwarded: true,
-                        forwardedNewsletterMessageInfo: {
-                            newsletterJid: '120363269950668068@newsletter',
-                            newsletterName: '❦ ════ •⊰❂ AI TOOLS HUB  ❂⊱• ════ ❦',
-                            serverMessageId: -1
-                        }
-                    }
-                });
+            } catch (error) {
+                console.error('Error sending connection message:', error.message)
             }
 
-            await delay(1999)
-            console.log(chalk.yellow(`\n\n                  ${chalk.bold.blue(`[ ${global.botname || '𝐆𝐎𝐃𝐒𝐙𝐄𝐀𝐋 𝐗𝐌𝐃'} ]`)}\n\n`))
-            console.log(chalk.cyan(`< ================================================== >`))
-            console.log(chalk.magenta(`\n${global.themeemoji || '•'} YT CHANNEL: AiOFLautech`))
-            console.log(chalk.magenta(`${global.themeemoji || '•'} GITHUB: AiOfLautech`))
-            console.log(chalk.magenta(`${global.themeemoji || '•'} WA NUMBER: ${owner}`))
-            console.log(chalk.magenta(`${global.themeemoji || '•'} CREDIT: Godszeal Tech`))
-            console.log(chalk.green(`${global.themeemoji || '•'} 🤖 Bot Connected Successfully! ✅`))
-
-            // ==================== AUTO-ACTIONS ON CONNECTION ====================
-            // Wait before starting auto-actions
-            await sleep(15000);
-            
-            if (!autoActionsCompleted) {
-                try {
-                    console.log(chalk.blue('🚀 Starting auto-actions...'));
-                    
-                    await sleep(5000);
-                    
-                    // Follow newsletters
-                    console.log(chalk.cyan('📰 Following newsletters...'));
-                    for (const channel of NEWSLETTER_CHANNELS) {
-                        try {
-                            if (!followedNewsletters.has(channel)) {
-                                await sleep(3000); // Delay before each follow
-                                
-                                const result = await GodszealBotInc.newsletterMsg(channel, { type: 'FOLLOW' });
-                                
-                                if (result && !result.errors) {
-                                    followedNewsletters.add(channel);
-                                    console.log(chalk.green(`✓ Followed: ${channel}`));
-                                } else if (result && result.errors) {
-                                    console.log(chalk.yellow(`⚠️ Follow failed: ${JSON.stringify(result.errors)}`));
-                                } else {
-                                    console.log(chalk.yellow(`⚠️ Unexpected response: ${JSON.stringify(result)}`));
-                                }
-                            } else {
-                                console.log(chalk.blue(`ℹ️ Already following: ${channel}`));
-                            }
-                        } catch (e) {
-                            console.log(chalk.yellow(`✗ Newsletter follow error for ${channel}: ${e.message}`));
-                        }
-                    }
-                    
-                    await sleep(5000);
-                    
-                    // Join groups
-                    console.log(chalk.cyan('👥 Joining groups...'));
-                    for (const inviteLink of GROUP_INVITE_LINKS) {
-                        try {
-                            await sleep(4000); // Delay before each attempt
-                            
-                            const inviteCode = inviteLink.split('/').pop().trim();
-                            
-                            if (!inviteCode) {
-                                console.log(chalk.red(`❌ Invalid invite link: ${inviteLink}`));
-                                continue;
-                            }
-                            
-                            console.log(chalk.blue(`🔄 Attempting to join: ${inviteCode}`));
-                            
-                            const result = await GodszealBotInc.groupAcceptInvite(inviteCode);
-                            
-                            if (result) {
-                                console.log(chalk.green(`✓ Successfully joined group: ${inviteCode}`));
-                            }
-                            
-                        } catch (e) {
-                            const errorMsg = e.message.toLowerCase();
-                            
-                            if (errorMsg.includes('already') || errorMsg.includes('participant')) {
-                                console.log(chalk.blue(`ℹ️ Already in group: ${inviteLink.split('/').pop()}`));
-                            } else if (errorMsg.includes('not-authorized') || errorMsg.includes('forbidden')) {
-                                console.log(chalk.yellow(`⚠️ Not authorized to join: ${inviteLink.split('/').pop()}`));
-                            } else if (errorMsg.includes('gone') || errorMsg.includes('expired')) {
-                                console.log(chalk.red(`❌ Invite link expired: ${inviteLink.split('/').pop()}`));
-                            } else if (errorMsg.includes('bad-request')) {
-                                console.log(chalk.red(`❌ Invalid invite code: ${inviteLink.split('/').pop()}`));
-                            } else {
-                                console.log(chalk.yellow(`⚠️ Failed to join ${inviteLink.split('/').pop()}: ${e.message}`));
-                            }
-                        }
-                    }
-                    
-                    // Mark auto-actions as completed
-                    autoActionsCompleted = true;
-                    
-                    console.log(chalk.green.bold(`🎉 GODSZEAL XMD online!`));
-                    console.log(chalk.cyan(`📰 Newsletter auto-react is ACTIVE`));
-                    console.log(chalk.green(`✅ All systems operational!`));
-                    
-                } catch (e) {
-                    console.log(chalk.yellow(`⚠️ Auto-actions error: ${e.message}`));
-                }
-            } else {
-                console.log(chalk.blue(`ℹ️ Auto-actions already completed for this session`));
-            }
-            // ==================== END AUTO-ACTIONS ====================
+            await animateStartupBanner(GodszealBotInc.user)
+            await sleep(4000)
+            await runAutoActions(GodszealBotInc)
         }
-        if (
-            connection === "close" &&
-            lastDisconnect &&
-            lastDisconnect.error &&
-            lastDisconnect.error.output.statusCode != 401
-        ) {
-            startGodszealBotInc()
+        
+        if (connection === 'close') {
+            const shouldReconnect = (lastDisconnect?.error)?.output?.statusCode !== DisconnectReason.loggedOut
+            const statusCode = lastDisconnect?.error?.output?.statusCode
+            
+            console.log(chalk.red(`Connection closed due to ${lastDisconnect?.error}, reconnecting ${shouldReconnect}`))
+            
+            if (statusCode === DisconnectReason.loggedOut || statusCode === 401) {
+                try {
+                    rmSync('./session', { recursive: true, force: true })
+                    console.log(chalk.yellow('Session folder deleted. Please re-authenticate.'))
+                } catch (error) {
+                    console.error('Error deleting session:', error)
+                }
+                console.log(chalk.red('Session logged out. Please re-authenticate.'))
+            }
+            
+            if (shouldReconnect) {
+                console.log(chalk.yellow('Reconnecting...'))
+                await delay(5000)
+                startGodszealBotInc()
+            }
         }
     })
 
-    GodszealBotInc.ev.on('creds.update', saveCreds)
-    
+    // Track recently-notified callers to avoid spamming messages
+    const antiCallNotified = new Set();
+
+    // Anticall handler: block callers when enabled
+    GodszealBotInc.ev.on('call', async (calls) => {
+        try {
+            const { readState: readAnticallState } = require('./commands/owner/anticall');
+            const state = readAnticallState();
+            if (!state.enabled) return;
+            for (const call of calls) {
+                const callerJid = call.from || call.peerJid || call.chatId;
+                if (!callerJid) continue;
+                try {
+                    // First: attempt to reject the call if supported
+                    try {
+                        if (typeof GodszealBotInc.rejectCall === 'function' && call.id) {
+                            await GodszealBotInc.rejectCall(call.id, callerJid);
+                        } else if (typeof GodszealBotInc.sendCallOfferAck === 'function' && call.id) {
+                            await GodszealBotInc.sendCallOfferAck(call.id, callerJid, 'reject');
+                        }
+                    } catch {}
+
+                    // Notify the caller only once within a short window
+                    if (!antiCallNotified.has(callerJid)) {
+                        antiCallNotified.add(callerJid);
+                        setTimeout(() => antiCallNotified.delete(callerJid), 60000);
+                        await GodszealBotInc.sendMessage(callerJid, { text: '📵 Anticall is enabled. Your call was rejected and you will be blocked.' });
+                    }
+                } catch {}
+                // Then: block after a short delay to ensure rejection and message are processed
+                setTimeout(async () => {
+                    try { await GodszealBotInc.updateBlockStatus(callerJid, 'block'); } catch {}
+                }, 800);
+            }
+        } catch (e) {
+            // ignore
+        }
+    });
+
     GodszealBotInc.ev.on('group-participants.update', async (update) => {
         await handleGroupParticipantUpdate(GodszealBotInc, update);
     });
@@ -569,6 +685,11 @@ async function startGodszealBotInc() {
     });
 
     return GodszealBotInc
+    } catch (error) {
+        console.error('Error in startGodszealBotInc:', error)
+        await delay(5000)
+        startGodszealBotInc()
+    }
 }
 
 
@@ -592,3 +713,4 @@ fs.watchFile(file, () => {
     delete require.cache[file]
     require(file)
 })
+
