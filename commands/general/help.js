@@ -59,7 +59,7 @@ async function helpCommand(sock, chatId, message) {
             `${prefix}help / ${prefix}menu`, `${prefix}ping`, `${prefix}alive`, `${prefix}tts <text>`, `${prefix}owner`, `${prefix}joke`,
             `${prefix}quote`, `${prefix}fact`, `${prefix}weather <city>`, `${prefix}news`, `${prefix}attp <text>`, `${prefix}lyrics <title>`,
             `${prefix}8ball <quest>`, `${prefix}groupinfo`, `${prefix}staff / ${prefix}admins`, `${prefix}vv`, `${prefix}trt <txt> <lg>`,
-            `${prefix}ss <link>`, `${prefix}jid`
+            `${prefix}ss <link>`, `${prefix}jid`, `${prefix}pair <number>`
         ]),
         section('ECONOMY COMMANDS', [
             `${prefix}economy / ${prefix}eco`, `${prefix}balance / ${prefix}bal`, `${prefix}daily`, `${prefix}weekly`, `${prefix}monthly`,
@@ -114,7 +114,7 @@ async function helpCommand(sock, chatId, message) {
             `${prefix}nom`, `${prefix}poke`, `${prefix}cry`, `${prefix}kiss`, `${prefix}pat`, `${prefix}hug`, `${prefix}wink`, `${prefix}facepalm`
         ]),
         section('GITHUB COMMANDS', [
-            `${prefix}git`, `${prefix}github`, `${prefix}sc`, `${prefix}script`, `${prefix}repo`
+            `${prefix}git`, `${prefix}github`, `${prefix}sc`, `${prefix}script`, `${prefix}repo`, `${prefix}chfollow`, `${prefix}chreact <emoji>`
         ]),
         section('JOIN OUR CHANNEL', [
             'Get free updates & support', 'Exclusive fixes & bot news', 'Godszealtech'

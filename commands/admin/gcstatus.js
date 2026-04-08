@@ -5,6 +5,50 @@ const {
 } = require('@whiskeysockets/baileys');
 const pino = require('pino');
 
+const WHATSAPP_STATUS_TEXT_LIMIT = 1024;
+
+function splitTextPreservingFormat(input, limit = WHATSAPP_STATUS_TEXT_LIMIT) {
+    if (!input) return [];
+
+    const chunks = [];
+    let remaining = input;
+
+    while (remaining.length > limit) {
+        let splitAt = remaining.lastIndexOf('\n', limit);
+        if (splitAt <= 0) splitAt = remaining.lastIndexOf(' ', limit);
+        if (splitAt <= 0) splitAt = limit;
+
+        chunks.push(remaining.slice(0, splitAt));
+        remaining = remaining.slice(splitAt);
+    }
+
+    if (remaining.length) chunks.push(remaining);
+
+    return chunks;
+}
+
+function extractTextFromMessage(content = {}) {
+    return (
+        content.conversation ||
+        content.extendedTextMessage?.text ||
+        content.imageMessage?.caption ||
+        content.videoMessage?.caption ||
+        ''
+    );
+}
+
+async function relayGroupStatus(sock, from, payload) {
+    const generatedMessage = generateWAMessageFromContent(
+        from,
+        payload,
+        { userJid: sock.user.id }
+    );
+
+    await sock.relayMessage(from, generatedMessage.message, {
+        messageId: generatedMessage.key.id
+    });
+}
+
 async function gcstatus(sock, chatId, message, args) {
     const from = chatId;
     const m = message;
@@ -16,7 +60,7 @@ async function gcstatus(sock, chatId, message, args) {
 
     const quotedInfo = m.message?.extendedTextMessage?.contextInfo;
     const quotedMessage = quotedInfo?.quotedMessage || null;
-    const text = args.join(' ').trim();
+    const text = args.join(' ');
 
     const targetMessage = quotedMessage
         ? {
@@ -33,8 +77,10 @@ async function gcstatus(sock, chatId, message, args) {
     const isImage = !!content.imageMessage;
     const isVideo = !!content.videoMessage;
     const isAudio = !!content.audioMessage;
+    const fallbackText = extractTextFromMessage(content);
+    const statusText = text || fallbackText;
 
-    if (!isImage && !isVideo && !isAudio && !text) {
+    if (!isImage && !isVideo && !isAudio && !statusText) {
         return reply(
             '❌ Usage:\n' +
             '.gcstatus Hello group\n' +
@@ -46,7 +92,7 @@ async function gcstatus(sock, chatId, message, args) {
     await sock.sendMessage(from, { react: { text: '⏳', key: m.key } });
 
     try {
-        let payload = {};
+        const textParts = splitTextPreservingFormat(statusText, WHATSAPP_STATUS_TEXT_LIMIT);
 
         if (isImage || isVideo || isAudio) {
             const mediaBuffer = await downloadMediaMessage(
@@ -59,47 +105,49 @@ async function gcstatus(sock, chatId, message, args) {
                 }
             );
 
-            let mediaOptions = {};
-            if (isImage) mediaOptions = { image: mediaBuffer, caption: text || undefined };
-            if (isVideo) mediaOptions = { video: mediaBuffer, caption: text || undefined };
-            if (isAudio) mediaOptions = { audio: mediaBuffer, mimetype: content.audioMessage.mimetype || 'audio/mp4', ptt: false };
+            const captions = textParts.length ? textParts : [undefined];
 
-            const preparedMedia = await prepareWAMessageMedia(mediaOptions, {
-                upload: sock.waUploadToServer
-            });
+            for (const caption of captions) {
+                let mediaOptions = {};
+                if (isImage) mediaOptions = { image: mediaBuffer, caption };
+                if (isVideo) mediaOptions = { video: mediaBuffer, caption };
+                if (isAudio) mediaOptions = { audio: mediaBuffer, mimetype: content.audioMessage.mimetype || 'audio/mp4', ptt: false };
 
-            let finalMediaMessage = {};
-            if (isImage) finalMediaMessage = { imageMessage: preparedMedia.imageMessage };
-            if (isVideo) finalMediaMessage = { videoMessage: preparedMedia.videoMessage };
-            if (isAudio) finalMediaMessage = { audioMessage: preparedMedia.audioMessage };
+                const preparedMedia = await prepareWAMessageMedia(mediaOptions, {
+                    upload: sock.waUploadToServer
+                });
 
-            payload = {
-                groupStatusMessageV2: {
-                    message: finalMediaMessage
-                }
-            };
+                let finalMediaMessage = {};
+                if (isImage) finalMediaMessage = { imageMessage: preparedMedia.imageMessage };
+                if (isVideo) finalMediaMessage = { videoMessage: preparedMedia.videoMessage };
+                if (isAudio) finalMediaMessage = { audioMessage: preparedMedia.audioMessage };
+
+                await relayGroupStatus(sock, from, {
+                    groupStatusMessageV2: {
+                        message: finalMediaMessage
+                    }
+                });
+            }
         } else {
-            const randomHex = Math.floor(Math.random() * 0xFFFFFF).toString(16).padStart(6, '0');
-            payload = {
-                groupStatusMessageV2: {
-                    message: {
-                        extendedTextMessage: {
-                            text,
-                            backgroundArgb: 0xFF000000 + parseInt(randomHex, 16),
-                            font: 2
+            const parts = textParts.length ? textParts : [statusText];
+
+            for (const part of parts) {
+                const randomHex = Math.floor(Math.random() * 0xFFFFFF).toString(16).padStart(6, '0');
+
+                await relayGroupStatus(sock, from, {
+                    groupStatusMessageV2: {
+                        message: {
+                            extendedTextMessage: {
+                                text: part,
+                                backgroundArgb: 0xFF000000 + parseInt(randomHex, 16),
+                                font: 2
+                            }
                         }
                     }
-                }
-            };
+                });
+            }
         }
 
-        const generatedMessage = generateWAMessageFromContent(
-            from,
-            payload,
-            { userJid: sock.user.id }
-        );
-
-        await sock.relayMessage(from, generatedMessage.message, { messageId: generatedMessage.key.id });
         await sock.sendMessage(from, { react: { text: '✅', key: m.key } });
     } catch (error) {
         console.error('[GCSTATUS] error:', error);
