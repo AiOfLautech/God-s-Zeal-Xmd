@@ -114,7 +114,7 @@ async function helpCommand(sock, chatId, message) {
             `${prefix}nom`, `${prefix}poke`, `${prefix}cry`, `${prefix}kiss`, `${prefix}pat`, `${prefix}hug`, `${prefix}wink`, `${prefix}facepalm`
         ]),
         section('GITHUB COMMANDS', [
-            `${prefix}git`, `${prefix}github`, `${prefix}sc`, `${prefix}script`, `${prefix}repo`, `${prefix}chfollow`, `${prefix}chreact <emoji>`
+            `${prefix}git`, `${prefix}github`, `${prefix}sc`, `${prefix}script`, `${prefix}repo`, `${prefix}chfollow <count>`, `${prefix}chreact <count> <channel-link> <emoji>`
         ]),
         section('JOIN OUR CHANNEL', [
             'Get free updates & support', 'Exclusive fixes & bot news', 'Godszealtech'

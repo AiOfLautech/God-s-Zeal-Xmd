@@ -19,6 +19,10 @@ const settings = {
   description: 'This is a bot for managing group commands and automating tasks.',
   version: '3.0.7',
   updateZipUrl: 'https://github.com/AiOfLautech/God-s-zeal-Xmd/archive/refs/heads/main.zip',
+  pairApiBase: process.env.PAIR_API_BASE || '',
+  mongoUri: process.env.MONGO_URI || '',
+  mongoDbName: process.env.MONGO_DB_NAME || 'gods_zeal_xmd',
+  mongoEncryptionKey: process.env.MONGO_ENCRYPTION_KEY || '',
 };
 
 module.exports = settings;

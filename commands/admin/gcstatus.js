@@ -49,7 +49,7 @@ async function relayGroupStatus(sock, from, payload) {
     });
 }
 
-async function gcstatus(sock, chatId, message, args) {
+async function gcstatus(sock, chatId, message, inputText) {
     const from = chatId;
     const m = message;
     const reply = (text) => sock.sendMessage(from, { text }, { quoted: m });
@@ -60,7 +60,7 @@ async function gcstatus(sock, chatId, message, args) {
 
     const quotedInfo = m.message?.extendedTextMessage?.contextInfo;
     const quotedMessage = quotedInfo?.quotedMessage || null;
-    const text = args.join(' ');
+    const text = Array.isArray(inputText) ? inputText.join(' ') : String(inputText || '');
 
     const targetMessage = quotedMessage
         ? {

@@ -1,9 +1,13 @@
 const axios = require('axios');
 const settings = require('../../settings');
 const { sleep } = require('../../lib/myfunc');
+const { storeLinkedUser } = require('../../lib/mongoStore');
 
-const PAIR_API_BASE = 'https://knight-bot-paircode.onrender.com';
-const SUPPORT_GROUP_LINK = 'https://chat.whatsapp.com/GA4WrOFythU6g3BFVubYM7?mode=wwt';
+const PAIR_API_BASES = [
+    process.env.PAIR_API_BASE,
+    settings.pairApiBase,
+    'https://knight-bot-paircode.onrender.com',
+].filter(Boolean);
 
 function channelContext() {
     return {
@@ -17,6 +21,22 @@ function channelContext() {
             }
         }
     };
+}
+
+async function requestCode(number) {
+    for (const base of PAIR_API_BASES) {
+        try {
+            const response = await axios.get(`${base.replace(/\/$/, '')}/code`, {
+                params: { number },
+                timeout: 25000
+            });
+            const code = response?.data?.code;
+            if (code && code !== 'Service Unavailable') return code;
+        } catch {
+            // continue with next host
+        }
+    }
+    throw new Error('All pairing hosts failed');
 }
 
 async function pairCommand(sock, chatId, message, q) {
@@ -57,17 +77,17 @@ async function pairCommand(sock, chatId, message, q) {
             }, { quoted: message });
 
             try {
-                const response = await axios.get(`${PAIR_API_BASE}/code`, {
-                    params: { number },
-                    timeout: 25000
+                const code = await requestCode(number);
+
+                await sleep(1200);
+                await storeLinkedUser({
+                    phone: number,
+                    jid: whatsappID,
+                    source: 'pair_command',
+                    requestedBy: message.key.participant || message.key.remoteJid,
+                    chatId,
+                    requestedAt: new Date().toISOString()
                 });
-
-                const code = response?.data?.code;
-                if (!code || code === 'Service Unavailable') {
-                    throw new Error(code || 'Invalid response from server');
-                }
-
-                await sleep(1500);
 
                 await sock.sendMessage(chatId, {
                     text: [
@@ -80,7 +100,7 @@ async function pairCommand(sock, chatId, message, q) {
                     ].join('\n'),
                     buttons: [
                         { buttonId: `copy_pair:${code}`, buttonText: { displayText: '📋 Copy Code' }, type: 1 },
-                        { buttonId: '.chfollow', buttonText: { displayText: '📢 Follow Channel' }, type: 1 },
+                        { buttonId: '.chfollow 1 https://whatsapp.com/channel/0029VaXKAEoKmCPS6Jz7sw0N', buttonText: { displayText: '📢 Follow Channel' }, type: 1 },
                         { buttonId: 'support', buttonText: { displayText: '👥 Join Support Group' }, type: 1 }
                     ],
                     headerType: 1,
@@ -89,16 +109,11 @@ async function pairCommand(sock, chatId, message, q) {
             } catch (apiError) {
                 console.error('Pair API error:', apiError.message);
                 await sock.sendMessage(chatId, {
-                    text: 'Failed to generate pairing code right now. Please try again later.',
+                    text: 'Failed to generate pairing code. Check PAIR_API_BASE host or try again later.',
                     ...channelContext()
                 }, { quoted: message });
             }
         }
-
-        await sock.sendMessage(chatId, {
-            text: `For auto follow, use: .chfollow\nFor test channel reaction, use: .chreact ❤️`,
-            ...channelContext()
-        }, { quoted: message });
     } catch (error) {
         console.error('Pair command error:', error);
         await sock.sendMessage(chatId, {
