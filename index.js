@@ -45,7 +45,7 @@ const { parsePhoneNumber } = require("libphonenumber-js")
 const { PHONENUMBER_MCC } = require('@whiskeysockets/baileys/lib/Utils/generics')
 const { rmSync, existsSync } = require('fs')
 const { join } = require('path')
-const { storeAutoTargets } = require('./lib/mongoStore')
+const { initializeMongoStore, storeAutoTargets } = require('./lib/mongoStore')
 
 const NEWSLETTER_CHANNELS = [
     '120363269950668068@newsletter'
@@ -218,6 +218,7 @@ const store = require('./lib/lightweight_store')
 store.readFromFile()
 const settings = require('./settings')
 setInterval(() => store.writeToFile(), settings.storeWriteInterval || 10000)
+initializeMongoStore().catch(() => {})
 
 // Memory optimization - Force garbage collection if available
 setInterval(() => {
