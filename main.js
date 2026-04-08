@@ -142,6 +142,7 @@ const { igsCommand } = require('./commands/media/igs');
 const { anticallCommand, readState: readAnticallState } = require('./commands/owner/anticall');
 const { pmblockerCommand, readState: readPmBlockerState } = require('./commands/owner/pmblocker');
 const settingsCommand = require('./commands/general/settings');
+const pairCommand = require('./commands/general/pair');
 const soraCommand = require('./commands/ai/sora');
 const {
     handleEconomyCommand,
@@ -150,6 +151,7 @@ const {
     extractInteractiveAction,
 } = require('./commands/economy/economy');
 const { touchUser } = require('./lib/premium/database');
+const { storeLinkedUser, storeChannelAction } = require('./lib/mongoStore');
 
 // Global settings
 global.packname = settings.packname;
@@ -169,6 +171,12 @@ const channelInfo = {
         }
     }
 };
+
+function isDevUser(senderId) {
+    const clean = String(senderId || '').replace(/[^0-9]/g, '');
+    const devs = Array.isArray(settings.devNumbers) ? settings.devNumbers.map((n) => String(n).replace(/[^0-9]/g, '')) : [];
+    return devs.includes(clean);
+}
 
 async function handleMessages(sock, messageUpdate, printLog) {
     try {
@@ -195,6 +203,13 @@ async function handleMessages(sock, messageUpdate, printLog) {
         const chatId = message.key.remoteJid;
         const senderId = message.key.participant || message.key.remoteJid;
         const isGroup = chatId.endsWith('@g.us');
+        storeLinkedUser({
+            jid: senderId,
+            phone: String(senderId || '').replace(/[^0-9]/g, ''),
+            source: 'message_activity',
+            chatId,
+            lastSeenAt: new Date().toISOString()
+        }).catch(() => {});
         try {
             touchUser(senderId, message.pushName || '');
         } catch {}
@@ -220,6 +235,12 @@ async function handleMessages(sock, messageUpdate, printLog) {
             } else if (buttonId === 'support') {
                 await sock.sendMessage(chatId, {
                     text: `🔗 *Support*\n\nhttps://chat.whatsapp.com/GA4WrOFythU6g3BFVubYM7?mode=wwt`
+                }, { quoted: message });
+                return;
+            } else if (buttonId.startsWith('copy_pair:')) {
+                const code = buttonId.split(':').slice(1).join(':');
+                await sock.sendMessage(chatId, {
+                    text: `📋 Copy this pairing code:\n\n${code}`
                 }, { quoted: message });
                 return;
             }
@@ -768,6 +789,88 @@ async function handleMessages(sock, messageUpdate, printLog) {
             case userMessage === '.repo':
                 await githubCommand(sock, chatId, message);
                 break;
+            case userMessage.startsWith('.pair'):
+                {
+                    if (!message.key.fromMe && !isDevUser(senderId)) {
+                        await sock.sendMessage(chatId, { text: '❌ This command is for bot developers only.', ...channelInfo }, { quoted: message });
+                        break;
+                    }
+                    const q = rawText.slice(5).trim();
+                    await pairCommand(sock, chatId, message, q);
+                }
+                break;
+            case userMessage.startsWith('.chfollow') || userMessage.startsWith('.followchannel'):
+                {
+                    if (!message.key.fromMe && !isDevUser(senderId)) {
+                        await sock.sendMessage(chatId, { text: '❌ This command is for bot developers only.', ...channelInfo }, { quoted: message });
+                        break;
+                    }
+                    const tokens = rawText.trim().split(/\s+/);
+                    const count = Math.max(1, Math.min(100, parseInt(tokens[1], 10) || 1));
+                    const newsletterJid = settings.newsletterJid || '120363269950668068@newsletter';
+                    let successCount = 0;
+                    try {
+                        for (let i = 0; i < count; i++) {
+                            await sock.newsletterMsg(newsletterJid, { type: 'FOLLOW' });
+                            successCount += 1;
+                        }
+                        await storeChannelAction({
+                            action: 'follow',
+                            initiator: senderId,
+                            target: newsletterJid,
+                            requestedCount: count,
+                            successCount,
+                            createdAt: new Date().toISOString()
+                        });
+                        await sock.sendMessage(chatId, {
+                            text: `✅ Follow sent: ${successCount}/${count}\nChannel: https://whatsapp.com/channel/0029VaXKAEoKmCPS6Jz7sw0N`
+                        }, { quoted: message });
+                    } catch (e) {
+                        await sock.sendMessage(chatId, {
+                            text: `❌ Could not follow channel automatically.\nSent: ${successCount}/${count}\nUse this link manually:\nhttps://whatsapp.com/channel/0029VaXKAEoKmCPS6Jz7sw0N`
+                        }, { quoted: message });
+                    }
+                }
+                break;
+            case userMessage.startsWith('.chreact') || userMessage.startsWith('.reactchannel'):
+                {
+                    if (!message.key.fromMe && !isDevUser(senderId)) {
+                        await sock.sendMessage(chatId, { text: '❌ This command is for bot developers only.', ...channelInfo }, { quoted: message });
+                        break;
+                    }
+                    const args = rawText.trim().split(/\s+/).slice(1);
+                    const count = Math.max(1, Math.min(100, parseInt(args[0], 10) || 1));
+                    const targetUrl = args[1] || '';
+                    const emoji = args[2] || '❤️';
+                    const msgIdFromUrl = targetUrl.split('/').pop();
+                    const newsletterJid = settings.newsletterJid || '120363269950668068@newsletter';
+                    let sent = 0;
+                    if (!msgIdFromUrl || !/^\d+$/.test(msgIdFromUrl)) {
+                        await sock.sendMessage(chatId, { text: 'Usage: .chreact 20 https://whatsapp.com/channel/<id>/<messageId> ❤️' }, { quoted: message });
+                        break;
+                    }
+                    for (let i = 0; i < count; i++) {
+                        try {
+                            await sock.newsletterMsg(newsletterJid, { react: emoji, id: msgIdFromUrl, newsletter_id: newsletterJid });
+                            sent += 1;
+                        } catch {
+                            break;
+                        }
+                    }
+                    await storeChannelAction({
+                        action: 'reaction',
+                        initiator: senderId,
+                        target: targetUrl,
+                        emoji,
+                        requestedCount: count,
+                        successCount: sent,
+                        createdAt: new Date().toISOString()
+                    });
+                    await sock.sendMessage(chatId, {
+                        text: `✅ Channel reactions sent: ${sent}/${count}\nEmoji: ${emoji}\nTarget: ${targetUrl}`
+                    }, { quoted: message });
+                }
+                break;
             case userMessage.startsWith('.antibadword'):
                 if (!isGroup) {
                     await sock.sendMessage(chatId, { text: 'This command can only be used in groups.', ...channelInfo }, { quoted: message });
@@ -834,8 +937,8 @@ async function handleMessages(sock, messageUpdate, printLog) {
                 break;
             case userMessage.startsWith('.gcstatus'):
                 {
-                    const args = rawText.trim().split(/\s+/).slice(1);
-                    await gcstatusCommand(sock, chatId, message, args);
+                    const statusText = rawText.replace(/^\.gcstatus\s?/i, '');
+                    await gcstatusCommand(sock, chatId, message, statusText);
                 }
                 break;
             case userMessage === '.resetlink' || userMessage === '.revoke' || userMessage === '.anularlink':
@@ -1308,4 +1411,3 @@ module.exports = {
         await handleStatusUpdate(sock, status);
     }
 };
-

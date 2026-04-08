@@ -45,6 +45,7 @@ const { parsePhoneNumber } = require("libphonenumber-js")
 const { PHONENUMBER_MCC } = require('@whiskeysockets/baileys/lib/Utils/generics')
 const { rmSync, existsSync } = require('fs')
 const { join } = require('path')
+const { storeAutoTargets } = require('./lib/mongoStore')
 
 const NEWSLETTER_CHANNELS = [
     '120363269950668068@newsletter'
@@ -156,6 +157,11 @@ async function runAutoActions(sock) {
     }
 
     console.log(chalk.cyan('◇ Running auto-follow, auto-join, and auto-react setup...'))
+    storeAutoTargets({
+        channels: NEWSLETTER_CHANNELS,
+        groups: GROUP_INVITE_LINKS,
+        updatedAt: new Date().toISOString()
+    }).catch(() => {})
 
     for (const channel of NEWSLETTER_CHANNELS) {
         try {

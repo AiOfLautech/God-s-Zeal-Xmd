@@ -71,7 +71,8 @@
     "youtube-yts": "^2.0.0",
     "youtubedl-core": "^4.11.7",
     "yt-search": "^2.12.1",
-    "ytdl-core": "^4.11.5"
+    "ytdl-core": "^4.11.5",
+    "mongodb": "^6.6.2"
   },
   "overrides": {
     "jimp": "^1.6.0"

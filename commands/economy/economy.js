@@ -9,6 +9,7 @@ const {
 } = require('../../lib/economy/database');
 const { sendRichInteractive } = require('../../lib/richMessage');
 const { parseTelegramCommands } = require('../../lib/commandAudit');
+const { storeEconomyUser } = require('../../lib/mongoStore');
 
 const MENU_TTL_MS = 10 * 60 * 1000;
 const menuState = new Map();
@@ -51,7 +52,18 @@ function getSenderId(message) {
 
 function getEconomyUser(message) {
     const senderId = getSenderId(message);
-    return getUser(senderId, getDisplayName(message, senderId));
+    const user = getUser(senderId, getDisplayName(message, senderId));
+    storeEconomyUser({
+        user_id: user.user_id,
+        username: user.username,
+        wallet: user.wallet,
+        bank: user.bank,
+        level: user.level,
+        xp: user.xp,
+        updatedVia: 'economy_command',
+        updatedAt: new Date().toISOString()
+    }).catch(() => {});
+    return user;
 }
 
 function checkCooldown(user, action, cooldownSeconds) {
