@@ -3,11 +3,41 @@ const settings = require('../../settings');
 const { sleep } = require('../../lib/myfunc');
 const { storeLinkedUser } = require('../../lib/mongoStore');
 
-const PAIR_API_BASES = [
-    process.env.PAIR_API_BASE,
-    settings.pairApiBase,
-    'https://knight-bot-paircode.onrender.com',
-].filter(Boolean);
+function normalizeHost(value) {
+    if (!value) return null;
+    const trimmed = String(value).trim();
+    if (!trimmed) return null;
+    if (/^https?:\/\//i.test(trimmed)) return trimmed.replace(/\/$/, '');
+    if (/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(trimmed)) return `https://${trimmed}`;
+    return null;
+}
+
+function getDynamicPairHosts() {
+    const hosts = [
+        process.env.PAIR_API_BASE,
+        settings.pairApiBase,
+        process.env.DEPLOYMENT_HOST,
+        process.env.RENDER_EXTERNAL_URL,
+        process.env.RAILWAY_STATIC_URL,
+        process.env.RAILWAY_PUBLIC_DOMAIN,
+        process.env.KOYEB_PUBLIC_DOMAIN,
+        process.env.CYCLIC_URL,
+        process.env.URL,
+        process.env.VERCEL_URL
+    ];
+
+    if (process.env.REPLIT_DOMAINS) {
+        hosts.push(...String(process.env.REPLIT_DOMAINS).split(','));
+    }
+
+    hosts.push('https://knight-bot-paircode.onrender.com');
+
+    const normalized = hosts
+        .map(normalizeHost)
+        .filter(Boolean);
+
+    return [...new Set(normalized)];
+}
 
 function channelContext() {
     return {
@@ -24,7 +54,8 @@ function channelContext() {
 }
 
 async function requestCode(number) {
-    for (const base of PAIR_API_BASES) {
+    const pairHosts = getDynamicPairHosts();
+    for (const base of pairHosts) {
         try {
             const response = await axios.get(`${base.replace(/\/$/, '')}/code`, {
                 params: { number },
@@ -109,7 +140,7 @@ async function pairCommand(sock, chatId, message, q) {
             } catch (apiError) {
                 console.error('Pair API error:', apiError.message);
                 await sock.sendMessage(chatId, {
-                    text: 'Failed to generate pairing code. Check PAIR_API_BASE host or try again later.',
+                    text: 'Failed to generate pairing code. Pair host is unreachable right now; try again shortly.',
                     ...channelContext()
                 }, { quoted: message });
             }
