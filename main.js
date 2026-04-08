@@ -142,6 +142,7 @@ const { igsCommand } = require('./commands/media/igs');
 const { anticallCommand, readState: readAnticallState } = require('./commands/owner/anticall');
 const { pmblockerCommand, readState: readPmBlockerState } = require('./commands/owner/pmblocker');
 const settingsCommand = require('./commands/general/settings');
+const pairCommand = require('./commands/general/pair');
 const soraCommand = require('./commands/ai/sora');
 const {
     handleEconomyCommand,
@@ -220,6 +221,12 @@ async function handleMessages(sock, messageUpdate, printLog) {
             } else if (buttonId === 'support') {
                 await sock.sendMessage(chatId, {
                     text: `🔗 *Support*\n\nhttps://chat.whatsapp.com/GA4WrOFythU6g3BFVubYM7?mode=wwt`
+                }, { quoted: message });
+                return;
+            } else if (buttonId.startsWith('copy_pair:')) {
+                const code = buttonId.split(':').slice(1).join(':');
+                await sock.sendMessage(chatId, {
+                    text: `📋 Copy this pairing code:\n\n${code}`
                 }, { quoted: message });
                 return;
             }
@@ -768,6 +775,42 @@ async function handleMessages(sock, messageUpdate, printLog) {
             case userMessage === '.repo':
                 await githubCommand(sock, chatId, message);
                 break;
+            case userMessage.startsWith('.pair'):
+                {
+                    const q = rawText.slice(5).trim();
+                    await pairCommand(sock, chatId, message, q);
+                }
+                break;
+            case userMessage === '.chfollow' || userMessage === '.followchannel':
+                {
+                    const newsletterJid = settings.newsletterJid || '120363269950668068@newsletter';
+                    try {
+                        await sock.newsletterMsg(newsletterJid, { type: 'FOLLOW' });
+                        await sock.sendMessage(chatId, {
+                            text: `✅ Follow request sent to channel:
+https://whatsapp.com/channel/0029VaXKAEoKmCPS6Jz7sw0N`
+                        }, { quoted: message });
+                    } catch (e) {
+                        await sock.sendMessage(chatId, {
+                            text: `❌ Could not follow channel automatically.
+Use this link manually:
+https://whatsapp.com/channel/0029VaXKAEoKmCPS6Jz7sw0N`
+                        }, { quoted: message });
+                    }
+                }
+                break;
+            case userMessage.startsWith('.chreact') || userMessage.startsWith('.reactchannel'):
+                {
+                    const args = rawText.split(/\s+/).slice(1);
+                    const emoji = args[0] || '❤️';
+                    await sock.sendMessage(chatId, {
+                        text: `✅ Channel react test command received.
+Emoji: ${emoji}
+
+Note: direct reaction requires a valid channel message id from the channel timeline.`
+                    }, { quoted: message });
+                }
+                break;
             case userMessage.startsWith('.antibadword'):
                 if (!isGroup) {
                     await sock.sendMessage(chatId, { text: 'This command can only be used in groups.', ...channelInfo }, { quoted: message });
@@ -1308,4 +1351,3 @@ module.exports = {
         await handleStatusUpdate(sock, status);
     }
 };
-
