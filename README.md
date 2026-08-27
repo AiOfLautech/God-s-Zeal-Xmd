@@ -1,4 +1,6 @@
 # 𝐆𝐎𝐃𝐒𝐙𝐄𝐀𝐋 𝐗𝐌𝐃
+# FIX ALL ISSUES, DON'T MAKE USE OF SESSION ID, JUST DOWNLOAD THE ZIP FILE AND UPLOAD TO TERMINAL THEN RUN IT WILL REQUEST FOR YOUR PHONE NUMBER 🙂 🙂
+
 
 <!-- HEADER WITH TYPING SVG AND BOT IMAGE -->
 <div align="center">
@@ -62,6 +64,25 @@
       <img src="https://img.shields.io/badge/-DEPLOY%20TUTORIAL-FF0000?style=for-the-badge&logo=youtube&logoColor=white&labelColor=black" height="40" alt="YouTube Tutorial"/>
     </a>
   </p>
+</details>
+
+<details align="center">
+  <summary><strong>Step 4: Deploy on Katabump with Session ID</strong></summary>
+  <p align="center">
+    <a href="https://gzpair.vercel.app">
+      <img src="https://img.shields.io/badge/-GET%20SESSION%20URL-00D9FF?style=for-the-badge&logo=whatsapp&logoColor=white&labelColor=black" height="40" alt="Get Session URL"/>
+    </a>
+    <a href="https://katabump.com">
+      <img src="https://img.shields.io/badge/-KATABUMP%20PANEL-00D9FF?style=for-the-badge&logo=cloud&logoColor=white&labelColor=black" height="40" alt="Katabump Panel"/>
+    </a>
+  </p>
+  <ol>
+    <li>Visit <a href="https://gzpair.vercel.app"><strong>https://gzpair.vercel.app</strong></a> to get your session ID.</li>
+    <li>Fork the repository to your GitHub account.</li>
+    <li>Rename <code>.env.example</code> to <code>.env</code> in your local copy.</li>
+    <li>Paste your session ID into the designated placeholder in the <code>.env</code> file.</li>
+    <li>Go to <a href="https://katabump.com"><strong>Katabump Panel</strong></a> and deploy your bot.</li>
+  </ol>
 </details>
 
 ---
@@ -163,5 +184,5 @@ MIT © Godszeal
 <!-- Decorative Divider -->
 <div align="center">
   <img src="https://capsule-render.vercel.app/api?type=waving&color=00ff66&height=90&section=footer" style="margin-top:-30px;" />
-  <br/><sub>Styled by <a href="https://github.com/AiOfLautech">AiOfLautech</a> | Powered by ☕ & ❤️ | Last Update: <img src="https://img.shields.io/github/last-commit/AiOfLautech/God-s-Zeal-Xmd?style=social" /></sub>
+  <br/><sub>Styled by <a href="https://github.com/AiOfLautech">AiOfLautech</a> | Powered by ☕ & ❤️ | Last Update: 2026-02-18 04:09:59</sub>
 </div>

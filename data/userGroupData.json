@@ -1,12 +1,9 @@
 {
-  "users": [],
-  "groups": [],
-  "antilink": {},
   "antibadword": {},
-  "warnings": {},
-  "sudo": [],
+  "antilink": {},
   "welcome": {},
   "goodbye": {},
   "chatbot": {},
-  "autoReaction": false
+  "warnings": {},
+  "sudo": []
 }
