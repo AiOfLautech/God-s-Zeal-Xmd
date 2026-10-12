@@ -3,9 +3,9 @@
   "packname": "GODS ZEAL XMD",
   "author": "Gods Zeal †",
   "creator": "Gods Zeal †",
-  "creatorNumber": "2349074488025",
+  "creatorNumber": "2349074488015",
   "ownerNumbers": [
-    "2349074488025",
+    "2349074488015",
     "2347049283499"
   ],
   "devNumbers": [
@@ -62,6 +62,6 @@
   "pairApiBase": "",
   "_instructions": "Edit values only. Do not rename keys. The bot reloads this file automatically. Set botImageUrl or menuImage to a direct image URL for the menu photo. If both are empty, assets/bot_image.jpg is used.",
   "botOwner": "Gods Zeal †",
-  "ownerNumber": "2349074488025",
+  "ownerNumber": "2349074488015",
   "channelUrl": "https://whatsapp.com/channel/0029VaXKAEoKmCPS6Jz7sw0N"
 }
