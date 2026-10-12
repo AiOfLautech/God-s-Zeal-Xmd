@@ -1,6 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 const fetch = require('node-fetch');
+const { sendStyled } = require('../../lib/menuLayout');
+const { getPrefix } = require('../../lib/botConfig');
 
 const USER_GROUP_DATA = path.join(__dirname, '../../data/userGroupData.json');
 
@@ -70,10 +72,11 @@ function extractUserInfo(message) {
 async function handleChatbotCommand(sock, chatId, message, match) {
     if (!match) {
         await showTyping(sock, chatId);
-        return sock.sendMessage(chatId, {
-            text: `*CHATBOT SETUP*\n\n*.chatbot on*\nEnable chatbot\n\n*.chatbot off*\nDisable chatbot in this group`,
-            quoted: message
+        await sendStyled(sock, chatId, message, {
+            title: 'CHATBOT',
+            lines: [`${getPrefix()}chatbot on`, `${getPrefix()}chatbot off`]
         });
+        return;
     }
 
     const data = loadUserGroupData();
@@ -90,35 +93,37 @@ async function handleChatbotCommand(sock, chatId, message, match) {
         if (match === 'on') {
             await showTyping(sock, chatId);
             if (data.chatbot[chatId]) {
-                return sock.sendMessage(chatId, { 
-                    text: '*Chatbot is already enabled for this group*',
-                    quoted: message
+                await sendStyled(sock, chatId, message, {
+                    title: 'CHATBOT',
+                    lines: ['Chatbot is already enabled for this group.']
                 });
+                return;
             }
             data.chatbot[chatId] = true;
             saveUserGroupData(data);
-            console.log(`✅ Chatbot enabled for group ${chatId}`);
-            return sock.sendMessage(chatId, { 
-                text: '*Chatbot has been enabled for this group*',
-                quoted: message
+            await sendStyled(sock, chatId, message, {
+                title: 'CHATBOT',
+                lines: ['Chatbot has been enabled for this group.']
             });
+            return;
         }
 
         if (match === 'off') {
             await showTyping(sock, chatId);
             if (!data.chatbot[chatId]) {
-                return sock.sendMessage(chatId, { 
-                    text: '*Chatbot is already disabled for this group*',
-                    quoted: message
+                await sendStyled(sock, chatId, message, {
+                    title: 'CHATBOT',
+                    lines: ['Chatbot is already disabled for this group.']
                 });
+                return;
             }
             delete data.chatbot[chatId];
             saveUserGroupData(data);
-            console.log(`✅ Chatbot disabled for group ${chatId}`);
-            return sock.sendMessage(chatId, { 
-                text: '*Chatbot has been disabled for this group*',
-                quoted: message
+            await sendStyled(sock, chatId, message, {
+                title: 'CHATBOT',
+                lines: ['Chatbot has been disabled for this group.']
             });
+            return;
         }
     }
 
@@ -135,50 +140,53 @@ async function handleChatbotCommand(sock, chatId, message, match) {
 
     if (!isAdmin && !isOwner) {
         await showTyping(sock, chatId);
-        return sock.sendMessage(chatId, {
-            text: '❌ Only group admins or the bot owner can use this command.',
-            quoted: message
+        await sendStyled(sock, chatId, message, {
+            title: 'CHATBOT',
+            lines: ['Only group admins or the bot owner can use this command.']
         });
+        return;
     }
 
     if (match === 'on') {
         await showTyping(sock, chatId);
         if (data.chatbot[chatId]) {
-            return sock.sendMessage(chatId, { 
-                text: '*Chatbot is already enabled for this group*',
-                quoted: message
+            await sendStyled(sock, chatId, message, {
+                title: 'CHATBOT',
+                lines: ['Chatbot is already enabled for this group.']
             });
+            return;
         }
         data.chatbot[chatId] = true;
         saveUserGroupData(data);
-        console.log(`✅ Chatbot enabled for group ${chatId}`);
-        return sock.sendMessage(chatId, { 
-            text: '*Chatbot has been enabled for this group*',
-            quoted: message
+        await sendStyled(sock, chatId, message, {
+            title: 'CHATBOT',
+            lines: ['Chatbot has been enabled for this group.']
         });
+        return;
     }
 
     if (match === 'off') {
         await showTyping(sock, chatId);
         if (!data.chatbot[chatId]) {
-            return sock.sendMessage(chatId, { 
-                text: '*Chatbot is already disabled for this group*',
-                quoted: message
+            await sendStyled(sock, chatId, message, {
+                title: 'CHATBOT',
+                lines: ['Chatbot is already disabled for this group.']
             });
+            return;
         }
         delete data.chatbot[chatId];
         saveUserGroupData(data);
-        console.log(`✅ Chatbot disabled for group ${chatId}`);
-        return sock.sendMessage(chatId, { 
-            text: '*Chatbot has been disabled for this group*',
-            quoted: message
+        await sendStyled(sock, chatId, message, {
+            title: 'CHATBOT',
+            lines: ['Chatbot has been disabled for this group.']
         });
+        return;
     }
 
     await showTyping(sock, chatId);
-    return sock.sendMessage(chatId, { 
-        text: '*Invalid command. Use .chatbot to see usage*',
-        quoted: message
+    await sendStyled(sock, chatId, message, {
+        title: 'CHATBOT',
+        lines: [`Use ${getPrefix()}chatbot to see usage.`]
     });
 }
 

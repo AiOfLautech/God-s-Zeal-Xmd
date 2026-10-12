@@ -1,4 +1,6 @@
 const { downloadMediaMessage } = require('@whiskeysockets/baileys');
+const { sendStyled } = require('../../lib/menuLayout');
+const { getPrefix } = require('../../lib/botConfig');
 
 async function reminiCommand(sock, chatId, message) {
     const quotedInfo = message.message?.extendedTextMessage?.contextInfo;
@@ -16,9 +18,10 @@ async function reminiCommand(sock, chatId, message) {
 
     const hasImage = !!targetMessage.message?.imageMessage;
     if (!hasImage) {
-        await sock.sendMessage(chatId, {
-            text: 'Reply to an image with .remini to enhance it.'
-        }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'REMINI',
+            lines: [`Reply to an image with ${getPrefix()}remini to enhance it.`]
+        });
         return;
     }
 
@@ -28,14 +31,16 @@ async function reminiCommand(sock, chatId, message) {
             reuploadRequest: sock.updateMediaMessage
         });
 
-        await sock.sendMessage(chatId, {
-            text: 'Remini enhancement is not configured yet. Add your image enhancement API to enable it.'
-        }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'REMINI',
+            lines: ['Remini enhancement is not configured yet. Add your image enhancement API to enable it.']
+        });
     } catch (error) {
         console.error('Error in remini command:', error);
-        await sock.sendMessage(chatId, {
-            text: 'Failed to process the image for enhancement.'
-        }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'REMINI',
+            lines: ['Failed to process the image for enhancement.']
+        });
     }
 }
 

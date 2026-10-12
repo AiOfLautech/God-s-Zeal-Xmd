@@ -1,12 +1,17 @@
 ﻿const { handleWelcome } = require('../../lib/welcome');
 const { isWelcomeOn, getWelcome } = require('../../lib/index');
-const { channelInfo } = require('../../lib/messageConfig');
+const { getChannelInfo } = require('../../lib/messageConfig');
 const fetch = require('node-fetch');
+const { sendStyled } = require('../../lib/menuLayout');
+const { getConfig } = require('../../lib/botConfig');
 
 async function welcomeCommand(sock, chatId, message, match) {
     // Check if it's a group
     if (!chatId.endsWith('@g.us')) {
-        await sock.sendMessage(chatId, { text: 'This command can only be used in groups.' });
+        await sendStyled(sock, chatId, message, {
+            title: 'WELCOME',
+            lines: ['This command can only be used in groups.']
+        });
         return;
     }
 
@@ -76,7 +81,7 @@ async function handleJoinEvent(sock, id, participants) {
                     hour12: true
                 });
                 
-                finalMessage = `╭━━━〔 NEW MEMBER 〕━━━╮\n┃ Welcome: @${displayName} 👋\n┃ Members: ${groupMetadata.participants.length}\n┃ Time: ${timeString} ⏰\n╰━━━━━━━━━━━━━━━━━━╯\n\n*@${displayName}* Welcome to *${groupName}*! 🎉\n*Group Description*\n${groupDesc}\n\n> Powered by GODS ZEAL XMD`;
+                finalMessage = `╭━━━〔 NEW MEMBER 〕━━━╮\n┃ Welcome: @${displayName}\n┃ Members: ${groupMetadata.participants.length}\n┃ Time: ${timeString}\n╰━━━━━━━━━━━━━━━━━━╯\n\n*@${displayName}* Welcome to *${groupName}*!\n*Group Description*\n${groupDesc}\n\n> Powered by ${getConfig().botName}`;
             }
             
             // Try to send with image first (always try images)
@@ -105,9 +110,9 @@ async function handleJoinEvent(sock, id, participants) {
                         image: imageBuffer,
                         caption: finalMessage,
                         mentions: [participantString],
-                        ...channelInfo
+                        ...getChannelInfo()
                     });
-                    continue; // Skip to next participant
+                    continue;
                 }
             } catch (imageError) {
                 console.log('Image generation failed, falling back to text');
@@ -117,7 +122,7 @@ async function handleJoinEvent(sock, id, participants) {
             await sock.sendMessage(id, {
                 text: finalMessage,
                 mentions: [participantString],
-                ...channelInfo
+                ...getChannelInfo()
             });
         } catch (error) {
             console.error('Error sending welcome message:', error);
@@ -133,13 +138,13 @@ async function handleJoinEvent(sock, id, participants) {
                     .replace(/{group}/g, groupName)
                     .replace(/{description}/g, groupDesc);
             } else {
-                fallbackMessage = `Welcome @${user} to ${groupName}! 🎉`;
+                fallbackMessage = `Welcome @${user} to ${groupName}!`;
             }
             
             await sock.sendMessage(id, {
                 text: fallbackMessage,
                 mentions: [participantString],
-                ...channelInfo
+                ...getChannelInfo()
             });
         }
     }

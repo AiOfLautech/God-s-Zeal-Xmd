@@ -1,53 +1,44 @@
+const { sendStyled } = require('../../lib/menuLayout');
+
 async function groupInfoCommand(sock, chatId, msg) {
     try {
-        // Get group metadata
         const groupMetadata = await sock.groupMetadata(chatId);
-        
-        // Get group profile picture
         let pp;
         try {
             pp = await sock.profilePictureUrl(chatId, 'image');
         } catch {
-            pp = 'https://i.imgur.com/2wzGhpF.jpeg'; // Default image
+            pp = 'https://i.imgur.com/2wzGhpF.jpeg';
         }
 
-        // Get admins from participants
-        const participants = groupMetadata.participants;
+        const participants = groupMetadata.participants || [];
         const groupAdmins = participants.filter(p => p.admin);
-        const listAdmin = groupAdmins.map((v, i) => `${i + 1}. @${v.id.split('@')[0]}`).join('\n');
-        
-        // Get group owner
+        const listAdmin = groupAdmins.map((v, i) => `${i + 1}. @${v.id.split('@')[0]}`);
         const owner = groupMetadata.owner || groupAdmins.find(p => p.admin === 'superadmin')?.id || chatId.split('-')[0] + '@s.whatsapp.net';
 
-        // Create info text
-        const text = `
-┌──「 *INFO GROUP* 」
-▢ *♻️ID:*
-   • ${groupMetadata.id}
-▢ *🔖NAME* : 
-• ${groupMetadata.subject}
-▢ *👥Members* :
-• ${participants.length}
-▢ *🤿Group Owner:*
-• @${owner.split('@')[0]}
-▢ *🕵🏻‍♂️Admins:*
-${listAdmin}
-
-▢ *📌Description* :
-   • ${groupMetadata.desc?.toString() || 'No description'}
-`.trim();
-
-        // Send the message with image and mentions
+        await sendStyled(sock, chatId, msg, {
+            title: 'INFO GROUP',
+            lines: [
+                `ID ☇ ${groupMetadata.id}`,
+                `Name ☇ ${groupMetadata.subject}`,
+                `Members ☇ ${participants.length}`,
+                `Owner ☇ @${owner.split('@')[0]}`,
+                'Admins ☇',
+                ...listAdmin.slice(0, 12),
+                `Desc ☇ ${String(groupMetadata.desc || 'No description').slice(0, 120)}`
+            ]
+        });
         await sock.sendMessage(chatId, {
             image: { url: pp },
-            caption: text,
+            caption: groupMetadata.subject,
             mentions: [...groupAdmins.map(v => v.id), owner]
-        });
-
+        }).catch(() => {});
     } catch (error) {
         console.error('Error in groupinfo command:', error);
-        await sock.sendMessage(chatId, { text: 'Failed to get group info!' });
+        await sendStyled(sock, chatId, msg, {
+            title: 'INFO GROUP',
+            lines: ['Failed to get group info.']
+        });
     }
 }
 
-module.exports = groupInfoCommand; 
+module.exports = groupInfoCommand;

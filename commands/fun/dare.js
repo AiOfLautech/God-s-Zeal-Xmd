@@ -1,24 +1,22 @@
 const fetch = require('node-fetch');
+const { sendStyled } = require('../../lib/menuLayout');
 
 async function dareCommand(sock, chatId, message) {
     try {
-        const shizokeys = 'shizo';
-        const res = await fetch(`https://shizoapi.onrender.com/api/texts/dare?apikey=${shizokeys}`);
-        
-        if (!res.ok) {
-            throw await res.text();
-        }
-        
+        const res = await fetch('https://shizoapi.onrender.com/api/texts/dare?apikey=shizo');
+        if (!res.ok) throw await res.text();
         const json = await res.json();
-        const dareMessage = json.result;
-
-        // Send the dare message
-        await sock.sendMessage(chatId, { text: dareMessage }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'DARE',
+            lines: [json.result || 'Try something unexpected.']
+        });
     } catch (error) {
         console.error('Error in dare command:', error);
-        await sock.sendMessage(chatId, { text: '❌ Failed to get dare. Please try again later!' }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'DARE',
+            lines: ['Failed to get dare. Please try again later.']
+        });
     }
 }
 
 module.exports = { dareCommand };
-

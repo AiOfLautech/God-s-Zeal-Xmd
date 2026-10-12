@@ -1,4 +1,6 @@
 const axios = require('axios');
+const { sendStyled } = require('../../lib/menuLayout');
+const { getPrefix } = require('../../lib/botConfig');
 
 async function spotifyCommand(sock, chatId, message) {
     try {
@@ -12,7 +14,10 @@ async function spotifyCommand(sock, chatId, message) {
         const query = rawText.slice(used.length).trim();
 
         if (!query) {
-            await sock.sendMessage(chatId, { text: 'Usage: .spotify <song/artist/keywords>\nExample: .spotify con calma' }, { quoted: message });
+            await sendStyled(sock, chatId, message, {
+                title: 'SPOTIFY',
+                lines: [`Usage ☇ ${getPrefix()}spotify con calma`]
+            });
             return;
         }
 
@@ -26,7 +31,10 @@ async function spotifyCommand(sock, chatId, message) {
         const r = data.result;
         const audioUrl = r.audio;
         if (!audioUrl) {
-            await sock.sendMessage(chatId, { text: 'No downloadable audio found for this query.' }, { quoted: message });
+            await sendStyled(sock, chatId, message, {
+                title: 'SPOTIFY',
+                lines: ['No downloadable audio found for this query.']
+            });
             return;
         }
 
@@ -48,7 +56,10 @@ async function spotifyCommand(sock, chatId, message) {
 
     } catch (error) {
         console.error('[SPOTIFY] error:', error?.message || error);
-        await sock.sendMessage(chatId, { text: 'Failed to fetch Spotify audio. Try another query later.' }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'SPOTIFY',
+            lines: ['Failed to fetch Spotify audio. Try another query later.']
+        });
     }
 }
 

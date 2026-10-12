@@ -1,63 +1,58 @@
 const yts = require('yt-search');
 const axios = require('axios');
+const { sendStyled } = require('../../lib/menuLayout');
+const { getPrefix } = require('../../lib/botConfig');
 
 async function playCommand(sock, chatId, message) {
     try {
-        const text = message.message?.conversation || message.message?.extendedTextMessage?.text;
-        const searchQuery = text.split(' ').slice(1).join(' ').trim();
-        
+        const text = message.message?.conversation || message.message?.extendedTextMessage?.text || '';
+        const searchQuery = text.replace(/^[.\/\\!~#$%\-]+\S+\s*/, '').trim();
+
         if (!searchQuery) {
-            return await sock.sendMessage(chatId, { 
-                text: "What song do you want to download?"
+            await sendStyled(sock, chatId, message, {
+                title: 'MUSIC',
+                lines: [`Usage ☇ ${getPrefix()}music <song name>`]
             });
+            return;
         }
 
-        // Search for the song
         const { videos } = await yts(searchQuery);
         if (!videos || videos.length === 0) {
-            return await sock.sendMessage(chatId, { 
-                text: "No songs found!"
+            await sendStyled(sock, chatId, message, {
+                title: 'MUSIC',
+                lines: ['No songs found.']
             });
+            return;
         }
 
-        // Send loading message
-        await sock.sendMessage(chatId, {
-            text: "_Please wait your download is in progress_"
+        await sendStyled(sock, chatId, message, {
+            title: 'MUSIC',
+            lines: [`Downloading ${videos[0].title}`]
         });
 
-        // Get the first video result
         const video = videos[0];
-        const urlYt = video.url;
-
-        // Fetch audio data from API
-        const response = await axios.get(`https://apis-keith.vercel.app/download/dlmp3?url=${urlYt}`);
+        const response = await axios.get(`https://apis-keith.vercel.app/download/dlmp3?url=${video.url}`, { timeout: 60000 });
         const data = response.data;
-
         if (!data || !data.status || !data.result || !data.result.downloadUrl) {
-            return await sock.sendMessage(chatId, { 
-                text: "Failed to fetch audio from the API. Please try again later."
+            await sendStyled(sock, chatId, message, {
+                title: 'MUSIC',
+                lines: ['Failed to fetch audio. Please try again later.']
             });
+            return;
         }
 
-        const audioUrl = data.result.downloadUrl;
-        const title = data.result.title;
-
-        // Send the audio
         await sock.sendMessage(chatId, {
-            audio: { url: audioUrl },
-            mimetype: "audio/mpeg",
-            fileName: `${title}.mp3`
+            audio: { url: data.result.downloadUrl },
+            mimetype: 'audio/mpeg',
+            fileName: `${data.result.title || video.title}.mp3`
         }, { quoted: message });
-
     } catch (error) {
-        console.error('Error in song2 command:', error);
-        await sock.sendMessage(chatId, { 
-            text: "Download failed. Please try again later."
+        console.error('Error in play command:', error);
+        await sendStyled(sock, chatId, message, {
+            title: 'MUSIC',
+            lines: ['Download failed. Please try again later.']
         });
     }
 }
 
-module.exports = playCommand; 
-
-/*Powered by GOD'S ZEAL XMD*
-*Credits to Keith MD*`*/
+module.exports = playCommand;

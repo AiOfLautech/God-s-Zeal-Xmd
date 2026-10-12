@@ -2,6 +2,7 @@
 const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
 const fs = require('fs');
 const path = require('path');
+const { sendStyled } = require('../../lib/menuLayout');
 
 async function downloadMediaMessage(message, mediaType) {
     const stream = await downloadContentFromMessage(message, mediaType);
@@ -18,7 +19,10 @@ async function tagCommand(sock, chatId, senderId, messageText, replyMessage, mes
     const { isSenderAdmin, isBotAdmin } = await isAdmin(sock, chatId, senderId);
 
     if (!isBotAdmin) {
-        await sock.sendMessage(chatId, { text: 'Please make the bot an admin first.' }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'TAG',
+            lines: ['Please make the bot an admin first.']
+        });
         return;
     }
 

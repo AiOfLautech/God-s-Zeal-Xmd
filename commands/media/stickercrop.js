@@ -5,6 +5,8 @@ const path = require('path');
 const settings = require('../../settings');
 const webp = require('node-webpmux');
 const crypto = require('crypto');
+const { sendStyled } = require('../../lib/menuLayout');
+const { getPrefix } = require('../../lib/botConfig');
 
 async function stickercropCommand(sock, chatId, message) {
     // The message that will be quoted in the reply.
@@ -30,18 +32,10 @@ async function stickercropCommand(sock, chatId, message) {
     const mediaMessage = targetMessage.message?.imageMessage || targetMessage.message?.videoMessage || targetMessage.message?.documentMessage || targetMessage.message?.stickerMessage;
 
     if (!mediaMessage) {
-        await sock.sendMessage(chatId, { 
-            text: 'Please reply to an image/video/sticker with .crop, or send an image/video/sticker with .crop as the caption.',
-            contextInfo: {
-                forwardingScore: 999,
-                isForwarded: true,
-                forwardedNewsletterMessageInfo: {
-                    newsletterJid: '120363269950668068@newsletter',
-                    newsletterName: 'GODS ZEAL XMD',
-                    serverMessageId: -1
-                }
-            }
-        },{ quoted: messageToQuote });
+        await sendStyled(sock, chatId, messageToQuote, {
+            title: 'CROP',
+            lines: [`Reply to an image/video/sticker with ${getPrefix()}crop, or send media with ${getPrefix()}crop as the caption.`]
+        });
         return;
     }
 
@@ -52,17 +46,9 @@ async function stickercropCommand(sock, chatId, message) {
         });
 
         if (!mediaBuffer) {
-            await sock.sendMessage(chatId, { 
-                text: 'Failed to download media. Please try again.',
-                contextInfo: {
-                    forwardingScore: 999,
-                    isForwarded: true,
-                    forwardedNewsletterMessageInfo: {
-                        newsletterJid: '120363269950668068@newsletter',
-                        newsletterName: 'GODS ZEAL XMD',
-                        serverMessageId: -1
-                    }
-                }
+            await sendStyled(sock, chatId, messageToQuote, {
+                title: 'CROP',
+                lines: ['Failed to download media. Please try again.']
             });
             return;
         }
@@ -180,17 +166,9 @@ async function stickercropCommand(sock, chatId, message) {
 
     } catch (error) {
         console.error('Error in stickercrop command:', error);
-        await sock.sendMessage(chatId, { 
-            text: 'Failed to crop sticker! Try with an image.',
-            contextInfo: {
-                forwardingScore: 999,
-                isForwarded: true,
-                forwardedNewsletterMessageInfo: {
-                    newsletterJid: '120363269950668068@newsletter',
-                    newsletterName: 'GODS ZEAL XMD',
-                    serverMessageId: -1
-                }
-            }
+        await sendStyled(sock, chatId, messageToQuote, {
+            title: 'CROP',
+            lines: ['Failed to crop sticker. Try with an image.']
         });
     }
 }

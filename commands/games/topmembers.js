@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { sendStyled } = require('../../lib/menuLayout');
 
 const dataFilePath = path.join(__dirname, '..', '..', 'data', 'messageCount.json');
 
@@ -33,7 +34,10 @@ function incrementMessageCount(groupId, userId) {
 
 function topMembers(sock, chatId, isGroup) {
     if (!isGroup) {
-        sock.sendMessage(chatId, { text: 'This command is only available in group chats.' });
+        sendStyled(sock, chatId, null, {
+            title: 'TOP MEMBERS',
+            lines: ['This command is only available in group chats.']
+        });
         return;
     }
 
@@ -45,16 +49,17 @@ function topMembers(sock, chatId, isGroup) {
         .slice(0, 5); // Get top 5 members
 
     if (sortedMembers.length === 0) {
-        sock.sendMessage(chatId, { text: 'No message activity recorded yet.' });
+        sendStyled(sock, chatId, null, {
+            title: 'TOP MEMBERS',
+            lines: ['No message activity recorded yet.']
+        });
         return;
     }
 
-    let message = '🏆 Top Members Based on Message Count:\n\n';
-    sortedMembers.forEach(([userId, count], index) => {
-        message += `${index + 1}. @${userId.split('@')[0]} - ${count} messages\n`;
+    sendStyled(sock, chatId, null, {
+        title: 'TOP MEMBERS',
+        lines: sortedMembers.map(([userId, count], index) => `${index + 1}. @${userId.split('@')[0]} ☇ ${count}`)
     });
-
-    sock.sendMessage(chatId, { text: message, mentions: sortedMembers.map(([userId]) => userId) });
 }
 
 module.exports = { incrementMessageCount, topMembers };

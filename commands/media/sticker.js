@@ -5,6 +5,8 @@ const path = require('path');
 const settings = require('../../settings');
 const webp = require('node-webpmux');
 const crypto = require('crypto');
+const { sendStyled } = require('../../lib/menuLayout');
+const { getPrefix } = require('../../lib/botConfig');
 
 async function stickerCommand(sock, chatId, message) {
     // The message that will be quoted in the reply.
@@ -30,18 +32,10 @@ async function stickerCommand(sock, chatId, message) {
     const mediaMessage = targetMessage.message?.imageMessage || targetMessage.message?.videoMessage || targetMessage.message?.documentMessage;
 
     if (!mediaMessage) {
-        await sock.sendMessage(chatId, { 
-            text: 'Please reply to an image/video with .sticker, or send an image/video with .sticker as the caption.',
-            contextInfo: {
-                forwardingScore: 999,
-                isForwarded: true,
-                forwardedNewsletterMessageInfo: {
-                    newsletterJid: '120363269950668068@newsletter',
-                    newsletterName: 'GODS ZEAL XMD',
-                    serverMessageId: -1
-                }
-            }
-        },{ quoted: messageToQuote });
+        await sendStyled(sock, chatId, messageToQuote, {
+            title: 'STICKER',
+            lines: [`Reply to an image/video with ${getPrefix()}sticker, or send an image/video with ${getPrefix()}sticker as the caption.`]
+        });
         return;
     }
 
@@ -52,17 +46,9 @@ async function stickerCommand(sock, chatId, message) {
         });
 
         if (!mediaBuffer) {
-            await sock.sendMessage(chatId, { 
-                text: 'Failed to download media. Please try again.',
-                contextInfo: {
-                    forwardingScore: 999,
-                    isForwarded: true,
-                    forwardedNewsletterMessageInfo: {
-                        newsletterJid: '120363269950668068@newsletter',
-                        newsletterName: 'GODS ZEAL XMD',
-                        serverMessageId: -1
-                    }
-                }
+            await sendStyled(sock, chatId, messageToQuote, {
+                title: 'STICKER',
+                lines: ['Failed to download media. Please try again.']
             });
             return;
         }
@@ -210,17 +196,9 @@ async function stickerCommand(sock, chatId, message) {
 
     } catch (error) {
         console.error('Error in sticker command:', error);
-        await sock.sendMessage(chatId, { 
-            text: 'Failed to create sticker! Try again later.',
-            contextInfo: {
-                forwardingScore: 999,
-                isForwarded: true,
-                forwardedNewsletterMessageInfo: {
-                    newsletterJid: '120363269950668068@newsletter',
-                    newsletterName: 'GODS ZEAL XMD',
-                    serverMessageId: -1
-                }
-            }
+        await sendStyled(sock, chatId, messageToQuote, {
+            title: 'STICKER',
+            lines: ['Failed to create sticker. Try again later.']
         });
     }
 }

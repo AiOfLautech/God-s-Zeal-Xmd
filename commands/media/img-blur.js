@@ -1,6 +1,8 @@
 ﻿const { downloadMediaMessage } = require('@whiskeysockets/baileys');
 const axios = require('axios');
 const sharp = require('sharp');
+const { sendStyled } = require('../../lib/menuLayout');
+const { getPrefix } = require('../../lib/botConfig');
 
 async function blurCommand(sock, chatId, message, quotedMessage) {
     try {
@@ -10,9 +12,10 @@ async function blurCommand(sock, chatId, message, quotedMessage) {
         if (quotedMessage) {
             // If replying to a message
             if (!quotedMessage.imageMessage) {
-                await sock.sendMessage(chatId, { 
-                    text: '❌ Please reply to an image message' 
-                }, { quoted: message });
+                await sendStyled(sock, chatId, message, {
+                    title: 'BLUR',
+                    lines: ['Please reply to an image message.']
+                });
                 return;
             }
             
@@ -37,9 +40,10 @@ async function blurCommand(sock, chatId, message, quotedMessage) {
                 { }
             );
         } else {
-            await sock.sendMessage(chatId, { 
-                text: '❌ Please reply to an image or send an image with caption .blur' 
-            }, { quoted: message });
+            await sendStyled(sock, chatId, message, {
+                title: 'BLUR',
+                lines: [`Reply to an image or send an image with caption ${getPrefix()}blur`]
+            });
             return;
         }
 
@@ -74,9 +78,10 @@ async function blurCommand(sock, chatId, message, quotedMessage) {
 
     } catch (error) {
         console.error('Error in blur command:', error);
-        await sock.sendMessage(chatId, { 
-            text: '❌ Failed to blur image. Please try again later.' 
-        }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'BLUR',
+            lines: ['Failed to blur image. Please try again later.']
+        });
     }
 }
 

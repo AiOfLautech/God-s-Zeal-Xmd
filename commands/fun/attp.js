@@ -2,13 +2,18 @@
 const fs = require('fs');
 const path = require('path');
 const { writeExifImg, writeExifVid } = require('../../lib/exif');
+const { sendStyled } = require('../../lib/menuLayout');
+const { getPrefix } = require('../../lib/botConfig');
 
 async function attpCommand(sock, chatId, message) {
     const userMessage = message.message.conversation || message.message.extendedTextMessage?.text || '';
     const text = userMessage.split(' ').slice(1).join(' ');
 
     if (!text) {
-        await sock.sendMessage(chatId, { text: 'Please provide text after the .attp command.' }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'ATTP',
+            lines: [`Usage ☇ ${getPrefix()}attp hello`]
+        });
         return;
     }
 
@@ -20,7 +25,10 @@ async function attpCommand(sock, chatId, message) {
         await sock.sendMessage(chatId, { sticker: webpBuffer }, { quoted: message });
     } catch (error) {
         console.error('Error generating local sticker:', error);
-        await sock.sendMessage(chatId, { text: 'Failed to generate the sticker locally.' }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'ATTP',
+            lines: ['Failed to generate the sticker locally.']
+        });
     }
 }
 

@@ -2,6 +2,8 @@
 const path = require('path');
 const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
 const isOwnerOrSudo = require('../../lib/isOwner');
+const { sendStyled } = require('../../lib/menuLayout');
+const { getPrefix } = require('../../lib/botConfig');
 
 async function setProfilePicture(sock, chatId, msg) {
     try {
@@ -9,26 +11,27 @@ async function setProfilePicture(sock, chatId, msg) {
         const isOwner = await isOwnerOrSudo(senderId, sock, chatId);
         
         if (!msg.key.fromMe && !isOwner) {
-            await sock.sendMessage(chatId, { 
-                text: '❌ This command is only available for the owner!' 
+            await sendStyled(sock, chatId, msg, {
+                title: 'SETPP',
+                lines: ['This command is only available for the owner.']
             });
             return;
         }
 
-        // Check if message is a reply
         const quotedMessage = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage;
         if (!quotedMessage) {
-            await sock.sendMessage(chatId, { 
-                text: '⚠️ Please reply to an image with the .setpp command!' 
+            await sendStyled(sock, chatId, msg, {
+                title: 'SETPP',
+                lines: [`Reply to an image with ${getPrefix()}setpp.`]
             });
             return;
         }
 
-        // Check if quoted message contains an image
         const imageMessage = quotedMessage.imageMessage || quotedMessage.stickerMessage;
         if (!imageMessage) {
-            await sock.sendMessage(chatId, { 
-                text: '❌ The replied message must contain an image!' 
+            await sendStyled(sock, chatId, msg, {
+                title: 'SETPP',
+                lines: ['The replied message must contain an image.']
             });
             return;
         }
@@ -58,14 +61,15 @@ async function setProfilePicture(sock, chatId, msg) {
         // Clean up the temporary file
         fs.unlinkSync(imagePath);
 
-        await sock.sendMessage(chatId, { 
-            text: '✅ Successfully updated bot profile picture!' 
+        await sendStyled(sock, chatId, msg, {
+            title: 'SETPP',
+            lines: ['Successfully updated bot profile picture.']
         });
-
     } catch (error) {
         console.error('Error in setpp command:', error);
-        await sock.sendMessage(chatId, { 
-            text: '❌ Failed to update profile picture!' 
+        await sendStyled(sock, chatId, msg, {
+            title: 'SETPP',
+            lines: ['Failed to update profile picture.']
         });
     }
 }

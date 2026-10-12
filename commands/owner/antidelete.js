@@ -73,6 +73,8 @@ function saveAntideleteConfig(config) {
 }
 
 const isOwnerOrSudo = require('../../lib/isOwner');
+const { sendStyled } = require('../../lib/menuLayout');
+const { getPrefix } = require('../../lib/botConfig');
 
 // Command Handler
 async function handleAntideleteCommand(sock, chatId, message, match) {
@@ -80,15 +82,26 @@ async function handleAntideleteCommand(sock, chatId, message, match) {
     const isOwner = await isOwnerOrSudo(senderId, sock, chatId);
     
     if (!message.key.fromMe && !isOwner) {
-        return sock.sendMessage(chatId, { text: '*Only the bot owner can use this command.*' }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'ANTIDELETE',
+            lines: ['Only the bot owner can use this command.']
+        });
+        return;
     }
 
     const config = loadAntideleteConfig();
+    const prefix = getPrefix();
 
     if (!match) {
-        return sock.sendMessage(chatId, {
-            text: `*ANTIDELETE SETUP*\n\nCurrent Status: ${config.enabled ? '✅ Enabled' : '❌ Disabled'}\n\n*.antidelete on* - Enable\n*.antidelete off* - Disable`
-        }, {quoted: message});
+        await sendStyled(sock, chatId, message, {
+            title: 'ANTIDELETE',
+            lines: [
+                `Status ☇ ${config.enabled ? 'ON' : 'OFF'}`,
+                `${prefix}antidelete on`,
+                `${prefix}antidelete off`
+            ]
+        });
+        return;
     }
 
     if (match === 'on') {
@@ -96,11 +109,18 @@ async function handleAntideleteCommand(sock, chatId, message, match) {
     } else if (match === 'off') {
         config.enabled = false;
     } else {
-        return sock.sendMessage(chatId, { text: '*Invalid command. Use .antidelete to see usage.*' }, {quoted:message});
+        await sendStyled(sock, chatId, message, {
+            title: 'ANTIDELETE',
+            lines: [`Use ${prefix}antidelete to see usage.`]
+        });
+        return;
     }
 
     saveAntideleteConfig(config);
-    return sock.sendMessage(chatId, { text: `*Antidelete ${match === 'on' ? 'enabled' : 'disabled'}*` }, {quoted:message});
+    await sendStyled(sock, chatId, message, {
+        title: 'ANTIDELETE',
+        lines: [`Antidelete ${match === 'on' ? 'enabled' : 'disabled'}.`]
+    });
 }
 
 // Store incoming messages (also handles anti-view-once by forwarding immediately)

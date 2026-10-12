@@ -1,3 +1,5 @@
+const { sendStyled } = require('../../lib/menuLayout');
+
 const compliments = [
     "You're amazing just the way you are!",
     "You have a great sense of humor!",
@@ -50,8 +52,9 @@ async function complimentCommand(sock, chatId, message) {
         }
         
         if (!userToCompliment) {
-            await sock.sendMessage(chatId, { 
-                text: 'Please mention someone or reply to their message to compliment them!'
+            await sendStyled(sock, chatId, message, {
+                title: 'COMPLIMENT',
+                lines: ['Mention someone or reply to their message.']
             });
             return;
         }
@@ -61,30 +64,17 @@ async function complimentCommand(sock, chatId, message) {
         // Add delay to avoid rate limiting
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        await sock.sendMessage(chatId, { 
-            text: `Hey @${userToCompliment.split('@')[0]}, ${compliment}`,
-            mentions: [userToCompliment]
+        await sendStyled(sock, chatId, message, {
+            title: 'COMPLIMENT',
+            lines: [`@${userToCompliment.split('@')[0]}`, compliment]
         });
+        await sock.sendMessage(chatId, { text: `@${userToCompliment.split('@')[0]}`, mentions: [userToCompliment] }).catch(() => {});
     } catch (error) {
         console.error('Error in compliment command:', error);
-        if (error.data === 429) {
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            try {
-                await sock.sendMessage(chatId, { 
-                    text: 'Please try again in a few seconds.'
-                });
-            } catch (retryError) {
-                console.error('Error sending retry message:', retryError);
-            }
-        } else {
-            try {
-                await sock.sendMessage(chatId, { 
-                    text: 'An error occurred while sending the compliment.'
-                });
-            } catch (sendError) {
-                console.error('Error sending error message:', sendError);
-            }
-        }
+        await sendStyled(sock, chatId, message, {
+            title: 'COMPLIMENT',
+            lines: ['An error occurred while sending the compliment.']
+        });
     }
 }
 

@@ -2,6 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 const { UploadFileUgu, TelegraPh } = require('../../lib/uploader');
+const { sendStyled } = require('../../lib/menuLayout');
 
 async function getMediaBufferAndExt(message) {
     const m = message.message || {};
@@ -54,7 +55,10 @@ async function urlCommand(sock, chatId, message) {
         if (!media) media = await getQuotedMediaBufferAndExt(message);
 
         if (!media) {
-            await sock.sendMessage(chatId, { text: 'Send or reply to a media (image, video, audio, sticker, document) to get a URL.' }, { quoted: message });
+            await sendStyled(sock, chatId, message, {
+                title: 'URL',
+                lines: ['Send or reply to a media (image, video, audio, sticker, document).']
+            });
             return;
         }
 
@@ -85,14 +89,23 @@ async function urlCommand(sock, chatId, message) {
         }
 
         if (!url) {
-            await sock.sendMessage(chatId, { text: 'Failed to upload media.' }, { quoted: message });
+            await sendStyled(sock, chatId, message, {
+                title: 'URL',
+                lines: ['Failed to upload media.']
+            });
             return;
         }
 
-        await sock.sendMessage(chatId, { text: `URL: ${url}` }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'URL',
+            lines: [String(url)]
+        });
     } catch (error) {
         console.error('[URL] error:', error?.message || error);
-        await sock.sendMessage(chatId, { text: 'Failed to convert media to URL.' }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'URL',
+            lines: ['Failed to convert media to URL.']
+        });
     }
 }
 

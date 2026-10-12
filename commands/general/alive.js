@@ -1,34 +1,29 @@
-const settings = require('../../settings');
+const { getConfig, getPrefix } = require('../../lib/botConfig');
+const { sendStyled } = require('../../lib/menuLayout');
 
 async function aliveCommand(sock, chatId, message) {
     try {
-        const text = [
-            '┌ ❏ *⌜ BOT STATUS ⌟* ❏',
-            '│',
-            `├◆ Name: ${settings.botName}`,
-            `├◆ Version: ${settings.version}`,
-            `├◆ Prefix: ${settings.commandPrefix || '.'}`,
-            '├◆ Status: Online',
-            '├◆ Plan: Free',
-            '├◆ Type .menu for command list',
-            '└ ❏'
-        ].join('\n');
-
-        await sock.sendMessage(chatId, {
-            text,
-            contextInfo: {
-                forwardingScore: 999,
-                isForwarded: true,
-                forwardedNewsletterMessageInfo: {
-                    newsletterJid: settings.newsletterJid || '120363269950668068@newsletter',
-                    newsletterName: 'GODSZEAL XMD',
-                    serverMessageId: -1
-                }
-            }
-        }, { quoted: message });
+        const cfg = getConfig();
+        const prefix = getPrefix();
+        await sendStyled(sock, chatId, message, {
+            title: cfg.botName,
+            userName: message.pushName || cfg.botName,
+            lines: [
+                `Name ☇ *${cfg.botName}*`,
+                `Creator ☇ *${cfg.creator}*`,
+                `Version ☇ *${cfg.version}*`,
+                `Prefix ☇ *${prefix}*`,
+                `Newsletter ☇ *${cfg.newsletterName}*`,
+                'Status ☇ *Online*',
+                `Type ${prefix}menu for command list`
+            ]
+        });
     } catch (error) {
         console.error('Error in alive command:', error);
-        await sock.sendMessage(chatId, { text: 'Bot is alive and running.' }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'ALIVE',
+            lines: ['Bot is alive and running.']
+        });
     }
 }
 

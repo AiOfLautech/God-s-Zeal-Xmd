@@ -1,42 +1,50 @@
 ﻿const isAdmin = require('../../lib/isAdmin');
+const { sendStyled } = require('../../lib/menuLayout');
 
 async function tagNotAdminCommand(sock, chatId, senderId, message) {
     try {
         const { isSenderAdmin, isBotAdmin } = await isAdmin(sock, chatId, senderId);
-
         if (!isBotAdmin) {
-            await sock.sendMessage(chatId, { text: 'Please make the bot an admin first.' }, { quoted: message });
+            await sendStyled(sock, chatId, message, {
+                title: 'TAGNOTADMIN',
+                lines: ['Please make the bot an admin first.']
+            });
             return;
         }
-
         if (!isSenderAdmin) {
-            await sock.sendMessage(chatId, { text: 'Only admins can use the .tagnotadmin command.' }, { quoted: message });
+            await sendStyled(sock, chatId, message, {
+                title: 'TAGNOTADMIN',
+                lines: ['Only admins can use the tagnotadmin command.']
+            });
             return;
         }
 
         const groupMetadata = await sock.groupMetadata(chatId);
         const participants = groupMetadata.participants || [];
-
         const nonAdmins = participants.filter(p => !p.admin).map(p => p.id);
         if (nonAdmins.length === 0) {
-            await sock.sendMessage(chatId, { text: 'No non-admin members to tag.' }, { quoted: message });
+            await sendStyled(sock, chatId, message, {
+                title: 'TAGNOTADMIN',
+                lines: ['No non-admin members to tag.']
+            });
             return;
         }
 
-        let text = '🔊 *Hello Everyone:*\n\n';
-        nonAdmins.forEach(jid => {
-            text += `@${jid.split('@')[0]}\n`;
+        await sendStyled(sock, chatId, message, {
+            title: 'TAGNOTADMIN',
+            lines: [`Members ☇ ${nonAdmins.length}`]
         });
-
-        await sock.sendMessage(chatId, { text, mentions: nonAdmins }, { quoted: message });
+        await sock.sendMessage(chatId, {
+            text: nonAdmins.map(jid => `@${jid.split('@')[0]}`).join('\n'),
+            mentions: nonAdmins
+        }, { quoted: message });
     } catch (error) {
         console.error('Error in tagnotadmin command:', error);
-        await sock.sendMessage(chatId, { text: 'Failed to tag non-admin members.' }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'TAGNOTADMIN',
+            lines: ['Failed to tag non-admin members.']
+        });
     }
 }
 
 module.exports = tagNotAdminCommand;
-
-
-
-

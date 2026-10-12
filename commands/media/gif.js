@@ -1,16 +1,20 @@
 ﻿const axios = require('axios');
-const settings = require('../../settings'); // Assuming the API key is stored here
+const { sendStyled } = require('../../lib/menuLayout');
+const { getConfig, getPrefix } = require('../../lib/botConfig');
 
-async function gifCommand(sock, chatId, query) {
-    const apiKey = settings.giphyApiKey; // Replace with your Giphy API Key
+async function gifCommand(sock, chatId, query, message) {
+    const apiKey = getConfig().giphyApiKey;
 
     if (!query) {
-        await sock.sendMessage(chatId, { text: 'Please provide a search term for the GIF.' });
+        await sendStyled(sock, chatId, message, {
+            title: 'GIF',
+            lines: [`Usage ☇ ${getPrefix()}gif dancing`]
+        });
         return;
     }
 
     try {
-        const response = await axios.get(`https://api.giphy.com/v1/gifs/search`, {
+        const response = await axios.get('https://api.giphy.com/v1/gifs/search', {
             params: {
                 api_key: apiKey,
                 q: query,
@@ -18,20 +22,22 @@ async function gifCommand(sock, chatId, query) {
                 rating: 'g'
             }
         });
-
         const gifUrl = response.data.data[0]?.images?.downsized_medium?.url;
-
         if (gifUrl) {
-            await sock.sendMessage(chatId, { video: { url: gifUrl }, caption: `Here is your GIF for "${query}"` });
+            await sock.sendMessage(chatId, { video: { url: gifUrl }, caption: `GIF for ${query}` });
         } else {
-            await sock.sendMessage(chatId, { text: 'No GIFs found for your search term.' });
+            await sendStyled(sock, chatId, message, {
+                title: 'GIF',
+                lines: ['No GIFs found for your search term.']
+            });
         }
     } catch (error) {
         console.error('Error fetching GIF:', error);
-        await sock.sendMessage(chatId, { text: 'Failed to fetch GIF. Please try again later.' });
+        await sendStyled(sock, chatId, message, {
+            title: 'GIF',
+            lines: ['Failed to fetch GIF. Please try again later.']
+        });
     }
 }
 
 module.exports = gifCommand;
-
-

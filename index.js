@@ -20,6 +20,8 @@ const { handleMessages, handleGroupParticipantUpdate, handleStatus } = require('
 const PhoneNumber = require('awesome-phonenumber')
 const { imageToWebp, videoToWebp, writeExifImg, writeExifVid } = require('./lib/exif')
 const { smsg, isUrl, generateMessageTag, getBuffer, getSizeMedia, fetch, await, sleep, reSize } = require('./lib/myfunc')
+const { getConfig } = require('./lib/botConfig')
+const sessionManager = require('./lib/sessionManager')
 const {
     default: makeWASocket,
     useMultiFileAuthState,
@@ -41,23 +43,26 @@ const NodeCache = require("node-cache")
 // Using a lightweight persisted store instead of makeInMemoryStore (compat across versions)
 const pino = require("pino")
 const readline = require("readline")
-const { parsePhoneNumber } = require("libphonenumber-js")
-const { PHONENUMBER_MCC } = require('@whiskeysockets/baileys/lib/Utils/generics')
 const { rmSync, existsSync } = require('fs')
 const { join } = require('path')
 const { initializeMongoStore, storeAutoTargets } = require('./lib/mongoStore')
 
-const NEWSLETTER_CHANNELS = [
-    '120363269950668068@newsletter'
-]
+function liveConfig() {
+    return getConfig()
+}
 
-const GROUP_INVITE_LINKS = [
-    'https://chat.whatsapp.com/Djbakx80pHU5BmzvUuQUhY',
-    'https://chat.whatsapp.com/HcK11PBb8aq6kVy0ib87is',
-    'https://chat.whatsapp.com/L7lhDJmNj2s1w6lLjxaB6e',
-    'https://chat.whatsapp.com/I6yr0lkGzga9DMK3jUOthj',
-    'https://chat.whatsapp.com/LnrduS8xh1kB628OTONQ90'
-]
+function NEWSLETTER_CHANNELS() {
+    const cfg = liveConfig()
+    const list = Array.isArray(cfg.autoFollowChannels) && cfg.autoFollowChannels.length
+        ? cfg.autoFollowChannels
+        : [cfg.newsletterJid].filter(Boolean)
+    return list
+}
+
+function GROUP_INVITE_LINKS() {
+    const cfg = liveConfig()
+    return Array.isArray(cfg.groupInviteLinks) ? cfg.groupInviteLinks : []
+}
 
 const NEWSLETTER_REACTIONS = ['❤️', '🔥', '👍', '😎', '🙏', '🥲', '😭', '😂']
 const followedNewsletters = new Set()
@@ -123,13 +128,14 @@ async function animateStartupBanner(sockUser) {
 
     await delay(220)
 
+    const cfg = liveConfig()
     const infoBox = createBox([
-        'GODSZEAL XMD IS ACTIVE',
+        `${cfg.botName} IS ACTIVE`,
         '',
         `Session : ${sockUser?.id || 'unknown'}`,
-        `Version : ${settings.version}`,
-        `Owners  : ${(Array.isArray(owner) ? owner.join(', ') : String(owner || 'unknown'))}`,
-        `Channel : ${global.ytch || 'GODSZEAL'}`,
+        `Version : ${cfg.version}`,
+        `Owners  : ${(Array.isArray(owner) ? owner.join(', ') : String(owner || cfg.creator))}`,
+        `Channel : ${cfg.newsletterName}`,
         'Status  : Connected and ready'
     ], chalk.bgHex('#08121f').hex('#7dd3fc').bold)
 
@@ -157,13 +163,15 @@ async function runAutoActions(sock) {
     }
 
     console.log(chalk.cyan('◇ Running auto-follow, auto-join, and auto-react setup...'))
+    const channels = NEWSLETTER_CHANNELS()
+    const invites = GROUP_INVITE_LINKS()
     storeAutoTargets({
-        channels: NEWSLETTER_CHANNELS,
-        groups: GROUP_INVITE_LINKS,
+        channels,
+        groups: invites,
         updatedAt: new Date().toISOString()
     }).catch(() => {})
 
-    for (const channel of NEWSLETTER_CHANNELS) {
+    for (const channel of channels) {
         try {
             if (followedNewsletters.has(channel)) {
                 console.log(chalk.blue(`ℹ Already following ${channel}`))
@@ -184,7 +192,7 @@ async function runAutoActions(sock) {
         }
     }
 
-    for (const inviteLink of GROUP_INVITE_LINKS) {
+    for (const inviteLink of invites) {
         const inviteCode = extractInviteCode(inviteLink)
         if (!inviteCode) {
             console.log(chalk.red(`✗ Invalid group invite: ${inviteLink}`))
@@ -231,8 +239,9 @@ setInterval(() => {
 // Memory monitoring - Restart if RAM gets too high
 setInterval(() => {
     const used = process.memoryUsage().rss / 1024 / 1024
-    if (used > 400) {
-        console.log('⚠ RAM too high (>400MB), restarting bot...')
+    const maxRam = Number(liveConfig().maxRamMb || 1024)
+    if (used > maxRam) {
+        console.log(`⚠ RAM too high (>${maxRam}MB), restarting bot...`)
         process.exit(1) // Panel will auto-restart
     }
 }, 30_000) // check every 30 seconds
@@ -246,8 +255,8 @@ try {
     owner = []
 }
 
-global.botname = "GODS ZEAL XMD"
-global.themeemoji = "•"
+global.botname = liveConfig().botName
+global.themeemoji = liveConfig().themeEmoji || "•"
 const pairingCode = !!phoneNumber || process.argv.includes("--pairing-code")
 const useMobile = process.argv.includes("--mobile")
 
@@ -432,7 +441,7 @@ async function startGodszealBotInc() {
             }
             if (mek.key.id.startsWith('BAE5') && mek.key.id.length === 16) return
 
-            if (mek.key?.remoteJid?.endsWith('@newsletter') && NEWSLETTER_CHANNELS.includes(mek.key.remoteJid)) {
+            if (mek.key?.remoteJid?.endsWith('@newsletter') && NEWSLETTER_CHANNELS().includes(mek.key.remoteJid)) {
                 const newsletterJid = mek.key.remoteJid
                 const serverId = mek.key.server_id || mek.key.id
 
@@ -480,14 +489,15 @@ async function startGodszealBotInc() {
                 console.error("Error in handleMessages:", err)
                 // Only try to send error message if we have a valid chatId
                 if (mek.key && mek.key.remoteJid) {
+                    const cfg = liveConfig()
                     await GodszealBotInc.sendMessage(mek.key.remoteJid, {
-                        text: '❌ An error occurred while processing your message.',
+                        text: 'An error occurred while processing your message.',
                         contextInfo: {
                             forwardingScore: 1,
                             isForwarded: true,
                             forwardedNewsletterMessageInfo: {
-                                newsletterJid: '120363269950668068@newsletter',
-                                newsletterName: 'GODS ZEAL XMD',
+                                newsletterJid: cfg.newsletterJid,
+                                newsletterName: cfg.newsletterName,
                                 serverMessageId: -1
                             }
                         }
@@ -589,14 +599,15 @@ async function startGodszealBotInc() {
 
             try {
                 const botNumber = GodszealBotInc.user.id.split(':')[0] + '@s.whatsapp.net';
+                const cfg = liveConfig()
                 await GodszealBotInc.sendMessage(botNumber, {
-                    text: `🤖 Bot connected successfully.\n\n⏰ Time: ${new Date().toLocaleString()}\n✅ Status: Online and ready.\n✨ Auto follow, auto join, and auto react are enabled.`,
+                    text: `${cfg.botName} connected successfully.\n\nTime: ${new Date().toLocaleString()}\nStatus: Online and ready.\nAuto follow, auto join, and auto react are enabled.`,
                     contextInfo: {
                         forwardingScore: 1,
                         isForwarded: true,
                         forwardedNewsletterMessageInfo: {
-                            newsletterJid: '120363269950668068@newsletter',
-                            newsletterName: 'GODS ZEAL XMD',
+                            newsletterJid: cfg.newsletterJid,
+                            newsletterName: cfg.newsletterName,
                             serverMessageId: -1
                         }
                     }
@@ -700,11 +711,29 @@ async function startGodszealBotInc() {
 }
 
 
-// Start the bot with error handling
-startGodszealBotInc().catch(error => {
-    console.error('Fatal error:', error)
-    process.exit(1)
+sessionManager.registerHandlers({
+    handleMessages,
+    handleGroupParticipantUpdate,
+    handleStatus,
+    bindStore: (sock) => {
+        try { store.bind(sock.ev) } catch {}
+    }
 })
+
+// Start the bot with error handling
+startGodszealBotInc()
+    .then(async () => {
+        try {
+            await sessionManager.restoreSessions()
+            console.log(chalk.cyan('◇ Extra paired sessions restored'))
+        } catch (error) {
+            console.error('Failed to restore extra sessions:', error.message)
+        }
+    })
+    .catch(error => {
+        console.error('Fatal error:', error)
+        process.exit(1)
+    })
 process.on('uncaughtException', (err) => {
     console.error('Uncaught Exception:', err)
 })

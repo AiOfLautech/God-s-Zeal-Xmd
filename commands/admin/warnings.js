@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { sendStyled } = require('../../lib/menuLayout');
 
 const warningsFilePath = path.join(__dirname, '../../data/warnings.json');
 
@@ -11,19 +12,21 @@ function loadWarnings() {
     return JSON.parse(data);
 }
 
-async function warningsCommand(sock, chatId, mentionedJidList) {
+async function warningsCommand(sock, chatId, mentionedJidList, message) {
     const warnings = loadWarnings();
-
-    if (mentionedJidList.length === 0) {
-        await sock.sendMessage(chatId, { text: 'Please mention a user to check warnings.' });
+    if (!mentionedJidList || mentionedJidList.length === 0) {
+        await sendStyled(sock, chatId, message, {
+            title: 'WARNINGS',
+            lines: ['Mention a user to check warnings.']
+        });
         return;
     }
-
     const userToCheck = mentionedJidList[0];
     const warningCount = warnings[userToCheck] || 0;
-
-    await sock.sendMessage(chatId, { text: `User has ${warningCount} warning(s).` });
+    await sendStyled(sock, chatId, message, {
+        title: 'WARNINGS',
+        lines: [`@${userToCheck.split('@')[0]} has ${warningCount} warning(s).`]
+    });
 }
 
 module.exports = warningsCommand;
-

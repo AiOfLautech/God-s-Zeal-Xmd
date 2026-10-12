@@ -1,30 +1,22 @@
 const fetch = require('node-fetch');
+const { sendStyled } = require('../../lib/menuLayout');
 
 async function shayariCommand(sock, chatId, message) {
     try {
         const response = await fetch('https://shizoapi.onrender.com/api/texts/shayari?apikey=shizo');
         const data = await response.json();
-        
-        if (!data || !data.result) {
-            throw new Error('Invalid response from API');
-        }
-
-        const buttons = [
-            { buttonId: '.shayari', buttonText: { displayText: 'Shayari 🪄' }, type: 1 },
-            { buttonId: '.roseday', buttonText: { displayText: '🌹 RoseDay' }, type: 1 }
-        ];
-
-        await sock.sendMessage(chatId, { 
-            text: data.result,
-            buttons: buttons,
-            headerType: 1
-        }, { quoted: message });
+        if (!data || !data.result) throw new Error('Invalid response from API');
+        await sendStyled(sock, chatId, message, {
+            title: 'SHAYARI',
+            lines: String(data.result).split('\n').slice(0, 20)
+        });
     } catch (error) {
         console.error('Error in shayari command:', error);
-        await sock.sendMessage(chatId, { 
-            text: '❌ Failed to fetch shayari. Please try again later.',
-        }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'SHAYARI',
+            lines: ['Failed to fetch shayari. Please try again later.']
+        });
     }
 }
 
-module.exports = { shayariCommand }; 
+module.exports = { shayariCommand };

@@ -1,3 +1,5 @@
+const { sendStyled } = require('../../lib/menuLayout');
+
 async function promoteCommand(sock, chatId, mentionedJids, message) {
     let userToPromote = [];
 
@@ -8,9 +10,10 @@ async function promoteCommand(sock, chatId, mentionedJids, message) {
     }
 
     if (userToPromote.length === 0) {
-        await sock.sendMessage(chatId, {
-            text: 'Please mention a user or reply to a user message to promote.'
-        }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'PROMOTE',
+            lines: ['Mention a user or reply to a user message.']
+        });
         return;
     }
 
@@ -20,17 +23,23 @@ async function promoteCommand(sock, chatId, mentionedJids, message) {
         const promotedList = userToPromote.map((jid) => `@${jid.split('@')[0]}`).join('\n');
         const promoterJid = message.key.participant || message.key.remoteJid;
 
+        await sendStyled(sock, chatId, message, {
+            title: 'PROMOTE',
+            lines: [
+                `Promoted ☇ ${promotedList.replace(/\n/g, ', ')}`,
+                `By ☇ @${promoterJid.split('@')[0]}`
+            ]
+        });
         await sock.sendMessage(chatId, {
-            text:
-                '*GROUP PROMOTION*\n\n' +
-                `Promoted user${userToPromote.length > 1 ? 's' : ''}:\n${promotedList}\n\n` +
-                `Promoted by: @${promoterJid.split('@')[0]}\n` +
-                `Date: ${new Date().toLocaleString()}`,
+            text: promotedList,
             mentions: [...userToPromote, promoterJid]
-        }, { quoted: message });
+        }, { quoted: message }).catch(() => {});
     } catch (error) {
         console.error('Error in promote command:', error);
-        await sock.sendMessage(chatId, { text: 'Failed to promote user(s).' }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'PROMOTE',
+            lines: ['Failed to promote user(s).']
+        });
     }
 }
 

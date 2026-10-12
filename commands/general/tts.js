@@ -1,31 +1,40 @@
 const gTTS = require('gtts');
 const fs = require('fs');
 const path = require('path');
+const { sendStyled } = require('../../lib/menuLayout');
+const { getPrefix } = require('../../lib/botConfig');
 
 async function ttsCommand(sock, chatId, text, message, language = 'en') {
     if (!text) {
-        await sock.sendMessage(chatId, { text: 'Please provide the text for TTS conversion.' });
+        await sendStyled(sock, chatId, message, {
+            title: 'TTS',
+            lines: [`Usage ☇ ${getPrefix()}tts hello world`]
+        });
         return;
     }
 
     const fileName = `tts-${Date.now()}.mp3`;
-    const filePath = path.join(__dirname, '..', '..', 'assets', fileName);
-
-    const gtts = new gTTS(text, language);
-    gtts.save(filePath, async function (err) {
-        if (err) {
-            await sock.sendMessage(chatId, { text: 'Error generating TTS audio.' });
-            return;
-        }
-
+    const filePath = path.join(process.cwd(), 'temp', fileName);
+    try {
+        if (!fs.existsSync(path.dirname(filePath))) fs.mkdirSync(path.dirname(filePath), { recursive: true });
+        const gtts = new gTTS(text, language);
+        await new Promise((resolve, reject) => {
+            gtts.save(filePath, (err) => err ? reject(err) : resolve());
+        });
         await sock.sendMessage(chatId, {
             audio: { url: filePath },
-            mimetype: 'audio/mpeg'
+            mimetype: 'audio/mpeg',
+            ptt: false
         }, { quoted: message });
-
-        fs.unlinkSync(filePath);
-    });
+    } catch (error) {
+        console.error('TTS error:', error.message);
+        await sendStyled(sock, chatId, message, {
+            title: 'TTS',
+            lines: ['Error generating TTS audio.']
+        });
+    } finally {
+        try { if (fs.existsSync(filePath)) fs.unlinkSync(filePath); } catch {}
+    }
 }
 
 module.exports = ttsCommand;
-

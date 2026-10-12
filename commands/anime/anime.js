@@ -4,6 +4,8 @@ const fs = require('fs');
 const path = require('path');
 const webp = require('node-webpmux');
 const crypto = require('crypto');
+const { sendStyled } = require('../../lib/menuLayout');
+const { getPrefix } = require('../../lib/botConfig');
 
 const ANIMU_BASE = 'https://api.some-random-api.com/animu';
 
@@ -129,22 +131,34 @@ async function animeCommand(sock, chatId, message, args) {
             try {
                 const res = await axios.get(ANIMU_BASE);
                 const apiTypes = res.data && res.data.types ? res.data.types.map(s => s.replace('/animu/', '')).join(', ') : supported.join(', ');
-                await sock.sendMessage(chatId, { text: `Usage: .animu <type>\nTypes: ${apiTypes}` }, { quoted: message });
+                await sendStyled(sock, chatId, message, {
+                    title: 'ANIMU',
+                    lines: [`Usage ☇ ${getPrefix()}animu <type>`, `Types ☇ ${apiTypes}`]
+                });
             } catch {
-                await sock.sendMessage(chatId, { text: `Usage: .animu <type>\nTypes: ${supported.join(', ')}` }, { quoted: message });
+                await sendStyled(sock, chatId, message, {
+                    title: 'ANIMU',
+                    lines: [`Usage ☇ ${getPrefix()}animu <type>`, `Types ☇ ${supported.join(', ')}`]
+                });
             }
             return;
         }
 
         if (!supported.includes(sub)) {
-            await sock.sendMessage(chatId, { text: `❌ Unsupported type: ${sub}. Try one of: ${supported.join(', ')}` }, { quoted: message });
+            await sendStyled(sock, chatId, message, {
+                title: 'ANIMU',
+                lines: [`Unsupported type: ${sub}`, `Try one of: ${supported.join(', ')}`]
+            });
             return;
         }
 
         await sendAnimu(sock, chatId, message, sub);
     } catch (err) {
         console.error('Error in animu command:', err);
-        await sock.sendMessage(chatId, { text: '❌ An error occurred while fetching animu.' }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'ANIMU',
+            lines: ['An error occurred while fetching animu.']
+        });
     }
 }
 

@@ -1,3 +1,5 @@
+const { sendStyled } = require('../../lib/menuLayout');
+
 const insults = [
     "You're like a cloud. When you disappear, it's a beautiful day!",
     "You bring everyone so much joy when you leave the room!",
@@ -49,8 +51,9 @@ async function insultCommand(sock, chatId, message) {
         }
         
         if (!userToInsult) {
-            await sock.sendMessage(chatId, { 
-                text: 'Please mention someone or reply to their message to insult them!'
+            await sendStyled(sock, chatId, message, {
+                title: 'INSULT',
+                lines: ['Mention someone or reply to their message.']
             });
             return;
         }
@@ -60,30 +63,17 @@ async function insultCommand(sock, chatId, message) {
         // Add delay to avoid rate limiting
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        await sock.sendMessage(chatId, { 
-            text: `Hey @${userToInsult.split('@')[0]}, ${insult}`,
-            mentions: [userToInsult]
+        await sendStyled(sock, chatId, message, {
+            title: 'INSULT',
+            lines: [`@${userToInsult.split('@')[0]}`, insult]
         });
+        await sock.sendMessage(chatId, { text: `@${userToInsult.split('@')[0]}`, mentions: [userToInsult] }).catch(() => {});
     } catch (error) {
         console.error('Error in insult command:', error);
-        if (error.data === 429) {
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            try {
-                await sock.sendMessage(chatId, { 
-                    text: 'Please try again in a few seconds.'
-                });
-            } catch (retryError) {
-                console.error('Error sending retry message:', retryError);
-            }
-        } else {
-            try {
-                await sock.sendMessage(chatId, { 
-                    text: 'An error occurred while sending the insult.'
-                });
-            } catch (sendError) {
-                console.error('Error sending error message:', sendError);
-            }
-        }
+        await sendStyled(sock, chatId, message, {
+            title: 'INSULT',
+            lines: ['An error occurred while sending the insult.']
+        });
     }
 }
 

@@ -1,6 +1,8 @@
 ﻿const settings = require('../../settings');
 const { addSudo, removeSudo, getSudoList } = require('../../lib/index');
 const isOwnerOrSudo = require('../../lib/isOwner');
+const { sendStyled } = require('../../lib/menuLayout');
+const { getPrefix, getConfig } = require('../../lib/botConfig');
 
 function extractMentionedJid(message) {
     const mentioned = message.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
@@ -14,59 +16,75 @@ function extractMentionedJid(message) {
 async function sudoCommand(sock, chatId, message) {
     const senderJid = message.key.participant || message.key.remoteJid;
     const isOwner = message.key.fromMe || await isOwnerOrSudo(senderJid, sock, chatId);
-
+    const prefix = getPrefix();
     const rawText = message.message?.conversation || message.message?.extendedTextMessage?.text || '';
     const args = rawText.trim().split(' ').slice(1);
     const sub = (args[0] || '').toLowerCase();
 
     if (!sub || !['add', 'del', 'remove', 'list'].includes(sub)) {
-        await sock.sendMessage(chatId, { text: 'Usage:\n.sudo add <@user|number>\n.sudo del <@user|number>\n.sudo list' },{quoted :message});
+        await sendStyled(sock, chatId, message, {
+            title: 'SUDO',
+            lines: [
+                `${prefix}sudo add <@user|number>`,
+                `${prefix}sudo del <@user|number>`,
+                `${prefix}sudo list`
+            ]
+        });
         return;
     }
 
     if (sub === 'list') {
         const list = await getSudoList();
         if (list.length === 0) {
-            await sock.sendMessage(chatId, { text: 'No sudo users set.' },{quoted :message});
+            await sendStyled(sock, chatId, message, { title: 'SUDO', lines: ['No sudo users set.'] });
             return;
         }
-        const text = list.map((j, i) => `${i + 1}. ${j}`).join('\n');
-        await sock.sendMessage(chatId, { text: `Sudo users:\n${text}` },{quoted :message});
+        await sendStyled(sock, chatId, message, {
+            title: 'SUDO',
+            lines: list.map((j, i) => `${i + 1}. ${j}`)
+        });
         return;
     }
 
     if (!isOwner) {
-        await sock.sendMessage(chatId, { text: '❌ Only owner can add/remove sudo users. Use .sudo list to view.' },{quoted :message});
+        await sendStyled(sock, chatId, message, {
+            title: 'SUDO',
+            lines: ['Only owner can add or remove sudo users.']
+        });
         return;
     }
 
     const targetJid = extractMentionedJid(message);
     if (!targetJid) {
-        await sock.sendMessage(chatId, { text: 'Please mention a user or provide a number.' },{quoted :message});
+        await sendStyled(sock, chatId, message, {
+            title: 'SUDO',
+            lines: ['Mention a user or provide a number.']
+        });
         return;
     }
 
     if (sub === 'add') {
         const ok = await addSudo(targetJid);
-        await sock.sendMessage(chatId, { text: ok ? `✅ Added sudo: ${targetJid}` : '❌ Failed to add sudo' },{quoted :message});
+        await sendStyled(sock, chatId, message, {
+            title: 'SUDO',
+            lines: [ok ? `Added sudo: ${targetJid}` : 'Failed to add sudo']
+        });
         return;
     }
 
     if (sub === 'del' || sub === 'remove') {
-        const ownerJid = settings.ownerNumber + '@s.whatsapp.net';
+        const cfg = getConfig();
+        const ownerJid = (cfg.ownerNumber || settings.ownerNumber) + '@s.whatsapp.net';
         if (targetJid === ownerJid) {
-            await sock.sendMessage(chatId, { text: 'Owner cannot be removed.' },{quoted :message});
+            await sendStyled(sock, chatId, message, { title: 'SUDO', lines: ['Owner cannot be removed.'] });
             return;
         }
         const ok = await removeSudo(targetJid);
-        await sock.sendMessage(chatId, { text: ok ? `✅ Removed sudo: ${targetJid}` : '❌ Failed to remove sudo' },{quoted :message});
-        return;
+        await sendStyled(sock, chatId, message, {
+            title: 'SUDO',
+            lines: [ok ? `Removed sudo: ${targetJid}` : 'Failed to remove sudo']
+        });
     }
 }
 
 module.exports = sudoCommand;
-
-
-
-
-

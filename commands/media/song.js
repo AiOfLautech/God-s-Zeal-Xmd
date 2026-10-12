@@ -3,6 +3,8 @@ const yts = require('yt-search');
 const fs = require('fs');
 const path = require('path');
 const { toAudio } = require('../../lib/converter');
+const { sendStyled } = require('../../lib/menuLayout');
+const { getPrefix } = require('../../lib/botConfig');
 
 const AXIOS_DEFAULTS = {
 	timeout: 60000,
@@ -69,9 +71,13 @@ async function getOkatsuDownloadByUrl(youtubeUrl) {
 
 async function songCommand(sock, chatId, message) {
     try {
-        const text = message.message?.conversation || message.message?.extendedTextMessage?.text || '';
+        const raw = message.message?.conversation || message.message?.extendedTextMessage?.text || '';
+        const text = String(raw).replace(/^[.\/\\!~#$%\-]+\S+\s*/, '').trim();
         if (!text) {
-            await sock.sendMessage(chatId, { text: 'Usage: .song <song name or YouTube link>' }, { quoted: message });
+            await sendStyled(sock, chatId, message, {
+                title: 'SONG',
+                lines: [`Usage ☇ ${getPrefix()}song <song name or YouTube link>`]
+            });
             return;
         }
 
@@ -81,7 +87,10 @@ async function songCommand(sock, chatId, message) {
         } else {
 			const search = await yts(text);
 			if (!search || !search.videos.length) {
-                await sock.sendMessage(chatId, { text: 'No results found.' }, { quoted: message });
+                await sendStyled(sock, chatId, message, {
+                    title: 'SONG',
+                    lines: ['No results found.']
+                });
                 return;
             }
 			video = search.videos[0];
@@ -310,9 +319,10 @@ async function songCommand(sock, chatId, message) {
             errorMessage = '❌ All download sources failed. The content may be unavailable or blocked.';
         }
         
-        await sock.sendMessage(chatId, { 
-            text: errorMessage 
-        }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'SONG',
+            lines: [errorMessage.replace(/[❌]/g, '').trim()]
+        });
     }
 }
 

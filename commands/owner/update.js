@@ -4,6 +4,7 @@ const path = require('path');
 const https = require('https');
 const settings = require('../../settings');
 const isOwnerOrSudo = require('../../lib/isOwner');
+const { sendStyled } = require('../../lib/menuLayout');
 
 function run(cmd) {
     return new Promise((resolve, reject) => {
@@ -144,7 +145,7 @@ async function updateViaZip(sock, chatId, message, zipOverride) {
     const srcRoot = fs.existsSync(root) && fs.lstatSync(root).isDirectory() ? root : extractTo;
 
     // Copy over while preserving runtime dirs/files
-    const ignore = ['node_modules', '.git', 'session', 'tmp', 'tmp/', 'temp', 'data', 'baileys_store.json'];
+    const ignore = ['node_modules', '.git', 'session', 'sessions', 'tmp', 'tmp/', 'temp', 'data', 'bot.json', 'baileys_store.json'];
     const copied = [];
     // Preserve ownerNumber from existing settings.js if present
     let preservedOwner = null;
@@ -176,7 +177,10 @@ async function updateViaZip(sock, chatId, message, zipOverride) {
 
 async function restartProcess(sock, chatId, message) {
     try {
-        await sock.sendMessage(chatId, { text: '✅ Update complete! Restarting...' }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'UPDATE',
+            lines: ['Update complete. Restarting.']
+        });
     } catch {}
     try {
         // Preferred: PM2
@@ -195,12 +199,18 @@ async function updateCommand(sock, chatId, message, zipOverride) {
     const isOwner = await isOwnerOrSudo(senderId, sock, chatId);
     
     if (!message.key.fromMe && !isOwner) {
-        await sock.sendMessage(chatId, { text: 'Only bot owner or sudo can use .update' }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'UPDATE',
+            lines: ['Only bot owner or sudo can use update.']
+        });
         return;
     }
     try {
         // Minimal UX
-        await sock.sendMessage(chatId, { text: '🔄 Updating the bot, please wait...' }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'UPDATE',
+            lines: ['Updating the bot, please wait.']
+        });
         if (await hasGitRepo()) {
             // silent
             const { oldRev, newRev, alreadyUpToDate, commits, files } = await updateViaGit();
@@ -215,14 +225,23 @@ async function updateCommand(sock, chatId, message, zipOverride) {
         }
         try {
             const v = require('../../settings').version || '';
-            await sock.sendMessage(chatId, { text: `✅ Update done. Restarting...` }, { quoted: message });
+            await sendStyled(sock, chatId, message, {
+                title: 'UPDATE',
+                lines: ['Update done. Restarting.']
+            });
         } catch {
-            await sock.sendMessage(chatId, { text: '✅ Restared Successfully\n Type .ping to check latest version.' }, { quoted: message });
+            await sendStyled(sock, chatId, message, {
+                title: 'UPDATE',
+                lines: ['Restarted successfully. Type ping to check version.']
+            });
         }
         await restartProcess(sock, chatId, message);
     } catch (err) {
         console.error('Update failed:', err);
-        await sock.sendMessage(chatId, { text: `❌ Update failed:\n${String(err.message || err)}` }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'UPDATE',
+            lines: [`Update failed: ${String(err.message || err).slice(0, 200)}`]
+        });
     }
 }
 

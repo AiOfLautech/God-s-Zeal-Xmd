@@ -1,4 +1,5 @@
 ﻿const isAdmin = require('../../lib/isAdmin');
+const { sendStyled } = require('../../lib/menuLayout');
 
 async function kickCommand(sock, chatId, senderId, mentionedJids, message) {
     const isOwner = message.key.fromMe;
@@ -6,12 +7,18 @@ async function kickCommand(sock, chatId, senderId, mentionedJids, message) {
         const { isSenderAdmin, isBotAdmin } = await isAdmin(sock, chatId, senderId);
 
         if (!isBotAdmin) {
-            await sock.sendMessage(chatId, { text: 'Please make the bot an admin first.' }, { quoted: message });
+            await sendStyled(sock, chatId, message, {
+                title: 'KICK',
+                lines: ['Please make the bot an admin first.']
+            });
             return;
         }
 
         if (!isSenderAdmin) {
-            await sock.sendMessage(chatId, { text: 'Only group admins can use the kick command.' }, { quoted: message });
+            await sendStyled(sock, chatId, message, {
+                title: 'KICK',
+                lines: ['Only group admins can use the kick command.']
+            });
             return;
         }
     }
@@ -26,9 +33,10 @@ async function kickCommand(sock, chatId, senderId, mentionedJids, message) {
     }
     
     if (usersToKick.length === 0) {
-        await sock.sendMessage(chatId, { 
-            text: 'Please mention the user or reply to their message to kick!'
-        }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'KICK',
+            lines: ['Mention the user or reply to their message.']
+        });
         return;
     }
 
@@ -102,9 +110,10 @@ async function kickCommand(sock, chatId, senderId, mentionedJids, message) {
     });
 
     if (isTryingToKickBot) {
-        await sock.sendMessage(chatId, { 
-            text: "I can't kick myself🤖"
-        }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'KICK',
+            lines: ['I cannot kick myself.']
+        });
         return;
     }
 
@@ -115,14 +124,19 @@ async function kickCommand(sock, chatId, senderId, mentionedJids, message) {
             return `@${jid.split('@')[0]}`;
         }));
         
-        await sock.sendMessage(chatId, { 
-            text: `${usernames.join(', ')} has been kicked successfully!`,
-            mentions: usersToKick
+        await sendStyled(sock, chatId, message, {
+            title: 'KICK',
+            lines: [`${usernames.join(', ')} has been kicked.`]
         });
+        await sock.sendMessage(chatId, {
+            text: usernames.join(' '),
+            mentions: usersToKick
+        }).catch(() => {});
     } catch (error) {
         console.error('Error in kick command:', error);
-        await sock.sendMessage(chatId, { 
-            text: 'Failed to kick user(s)!'
+        await sendStyled(sock, chatId, message, {
+            title: 'KICK',
+            lines: ['Failed to kick user(s).']
         });
     }
 }
