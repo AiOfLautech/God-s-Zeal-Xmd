@@ -32,8 +32,8 @@
     "classic",
     "compact"
   ],
-  "menuImage": "",
-  "botImageUrl": "",
+  "menuImage": "https://raw.githubusercontent.com/AiOfLautech/God-s-Zeal-Xmd/main/assets/bot_image.jpg",
+  "botImageUrl": "https://raw.githubusercontent.com/AiOfLautech/God-s-Zeal-Xmd/main/assets/bot_image.jpg",
   "giphyApiKey": "qnl7ssQChTdPjsKta2Ax2LMaGXz303tq",
   "updateZipUrl": "https://github.com/AiOfLautech/God-s-zeal-Xmd/archive/refs/heads/main.zip",
   "githubRepo": "https://github.com/AiOfLautech/God-s-Zeal-Xmd",

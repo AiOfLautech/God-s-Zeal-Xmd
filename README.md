@@ -14,6 +14,9 @@
   <img src="https://img.shields.io/badge/prefix-.-yellow?style=for-the-badge" />
   <img src="https://img.shields.io/github/stars/AiOfLautech/God-s-Zeal-Xmd?style=for-the-badge&color=yellow&label=Stars" />
   <img src="https://img.shields.io/github/forks/AiOfLautech/God-s-Zeal-Xmd?style=for-the-badge&color=blue&label=Forks" />
+  <img src="https://img.shields.io/github/last-commit/AiOfLautech/God-s-Zeal-Xmd?style=for-the-badge&color=red&label=Last%20Update" />
+  <img src="https://komarev.com/ghpvc/?username=AiOfLautech&color=brightgreen&style=for-the-badge&label=Repo%20Views" />
+  <img src="https://img.shields.io/github/downloads/AiOfLautech/God-s-Zeal-Xmd/total?style=for-the-badge&color=orange&label=Downloads" />
 </div>
 
 ---
@@ -136,11 +139,11 @@
   Bot image URL example:
 
   ```json
-  "botImageUrl": "https://example.com/my-bot.jpg",
-  "menuImage": "https://example.com/my-bot.jpg"
+  "menuImage": "https://raw.githubusercontent.com/AiOfLautech/God-s-Zeal-Xmd/main/assets/bot_image.jpg",
+  "botImageUrl": "https://raw.githubusercontent.com/AiOfLautech/God-s-Zeal-Xmd/main/assets/bot_image.jpg"
   ```
 
-  If both are empty, the bot uses `assets/bot_image.jpg`. You can also replace that local file. Use a direct image link (jpg / png), not a webpage.
+  Replace those URLs with your own direct jpg / png link. If both are empty, the bot uses `assets/bot_image.jpg`.
 </details>
 
 <details>
@@ -216,3 +219,9 @@ Edit `bot.json` first (name, owners, prefix, `botImageUrl`). The file reloads wi
 This is an unofficial WhatsApp bot. Automated clients can violate WhatsApp Terms of Service. Use at your own risk. Do not spam or run illegal activity.
 
 MIT (c) Godszeal
+
+<div align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=00ff66&height=90&section=footer" />
+  <br/>
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=22&pause=800&color=33FF00&center=true&vCenter=true&width=600&lines=GODSZEAL+XMD+is+active;Pair+your+number+and+run+.menu" alt="Footer typing"/>
+</div>
