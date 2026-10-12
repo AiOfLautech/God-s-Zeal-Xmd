@@ -1,6 +1,8 @@
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
+const { sendStyled } = require('../../lib/menuLayout');
+const { getPrefix, getConfig } = require('../../lib/botConfig');
 
 async function facebookCommand(sock, chatId, message) {
     try {
@@ -8,16 +10,18 @@ async function facebookCommand(sock, chatId, message) {
         const url = text.split(' ').slice(1).join(' ').trim();
         
         if (!url) {
-            return await sock.sendMessage(chatId, { 
-                text: "Please provide a Facebook video URL.\nExample: .fb https://www.facebook.com/..."
-            }, { quoted: message });
+            return await sendStyled(sock, chatId, message, {
+                title: 'FACEBOOK',
+                lines: ['Please provide a Facebook video URL.', `Example ☇ ${getPrefix()}fb https://www.facebook.com/...`]
+            });
         }
 
         // Validate Facebook URL
         if (!url.includes('facebook.com')) {
-            return await sock.sendMessage(chatId, { 
-                text: "That is not a Facebook link."
-            }, { quoted: message });
+            return await sendStyled(sock, chatId, message, {
+                title: 'FACEBOOK',
+                lines: ['That is not a Facebook link.']
+            });
         }
 
         // Send loading reaction
@@ -158,14 +162,15 @@ async function facebookCommand(sock, chatId, message) {
         }
 
         if (!fbvid) {
-            return await sock.sendMessage(chatId, { 
-                text: '❌ Failed to get video URL from Facebook.\n\nPossible reasons:\n• Video is private or deleted\n• Link is invalid\n• Video is not available for download\n\nPlease try a different Facebook video link.'
-            }, { quoted: message });
+            return await sendStyled(sock, chatId, message, {
+                title: 'FACEBOOK',
+                lines: ['Failed to get video URL from Facebook.', 'Video may be private, deleted, or invalid.']
+            });
         }
 
         // Try URL method first (more reliable)
         try {
-            const caption = title ? `𝗗𝗢𝗪𝗡𝗟𝗢𝗔𝗗𝗘𝗗 𝗕𝗬 GODS ZEAL XMD\n\n📝 Title: ${title}` : "𝗗𝗢𝗪𝗡𝗟𝗢𝗔𝗗𝗘𝗗 𝗕𝗬 GODS ZEAL XMD";
+            const caption = title ? `DOWNLOADED BY ${getConfig().botName}\n\nTitle: ${title}` : `DOWNLOADED BY ${getConfig().botName}`;
             
             await sock.sendMessage(chatId, {
                 video: { url: fbvid },
@@ -216,7 +221,7 @@ async function facebookCommand(sock, chatId, message) {
                 }
 
                 // Send the video
-                const caption = title ? `𝗗𝗢𝗪𝗡𝗟𝗢𝗔𝗗𝗘𝗗 𝗕𝗬 GODS ZEAL XMD\n\n📝 Title: ${title}` : "𝗗𝗢𝗪𝗡𝗟𝗢𝗔𝗗𝗘𝗗 𝗕𝗬 GODS ZEAL XMD";
+                const caption = title ? `DOWNLOADED BY ${getConfig().botName}\n\nTitle: ${title}` : `DOWNLOADED BY ${getConfig().botName}`;
                 
                 await sock.sendMessage(chatId, {
                     video: { url: tempFile },
@@ -239,9 +244,10 @@ async function facebookCommand(sock, chatId, message) {
 
     } catch (error) {
         console.error('Error in Facebook command:', error);
-        await sock.sendMessage(chatId, { 
-            text: "An error occurred. API might be down. Error: " + error.message
-        }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'FACEBOOK',
+            lines: [`An error occurred. API might be down. ${error.message}`]
+        });
     }
 }
 

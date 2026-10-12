@@ -1,4 +1,6 @@
 const fetch = require('node-fetch');
+const { sendStyled } = require('../../lib/menuLayout');
+const { getPrefix } = require('../../lib/botConfig');
 
 const BASE = 'https://api.shizo.top/pies';
 const VALID_COUNTRIES = ['india','malaysia', 'thailand', 'china', 'indonesia', 'japan', 'korea', 'vietnam'];
@@ -15,11 +17,17 @@ async function fetchPiesImageBuffer(country) {
 async function piesCommand(sock, chatId, message, args) {
 	const sub = (args && args[0] ? args[0] : '').toLowerCase();
 	if (!sub) {
-		await sock.sendMessage(chatId, { text: `Usage: .pies <country>\nCountries: ${VALID_COUNTRIES.join(', ')}` }, { quoted: message });
+		await sendStyled(sock, chatId, message, {
+			title: 'PIES',
+			lines: [`Usage ☇ ${getPrefix()}pies <country>`, `Countries ☇ ${VALID_COUNTRIES.join(', ')}`]
+		});
 		return;
 	}
 	if (!VALID_COUNTRIES.includes(sub)) {
-		await sock.sendMessage(chatId, { text: `❌ Unsupported country: ${sub}. Try one of: ${VALID_COUNTRIES.join(', ')}` }, { quoted: message });
+		await sendStyled(sock, chatId, message, {
+			title: 'PIES',
+			lines: [`Unsupported country: ${sub}`, `Try one of: ${VALID_COUNTRIES.join(', ')}`]
+		});
 		return;
 	}
 	try {
@@ -31,7 +39,10 @@ async function piesCommand(sock, chatId, message, args) {
 		);
 	} catch (err) {
 		console.error('Error in pies command:', err);
-		await sock.sendMessage(chatId, { text: '❌ Failed to fetch image. Please try again.' }, { quoted: message });
+		await sendStyled(sock, chatId, message, {
+			title: 'PIES',
+			lines: ['Failed to fetch image. Please try again.']
+		});
 	}
 }
 
@@ -45,9 +56,11 @@ async function piesAlias(sock, chatId, message, country) {
 		);
 	} catch (err) {
 		console.error(`Error in pies alias (${country}) command:`, err);
-		await sock.sendMessage(chatId, { text: '❌ Failed to fetch image. Please try again.' }, { quoted: message });
+		await sendStyled(sock, chatId, message, {
+			title: 'PIES',
+			lines: ['Failed to fetch image. Please try again.']
+		});
 	}
 }
 
 module.exports = { piesCommand, piesAlias, VALID_COUNTRIES };
-

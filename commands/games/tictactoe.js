@@ -1,4 +1,6 @@
 ﻿const TicTacToe = require('../../lib/tictactoe');
+const { sendStyled } = require('../../lib/menuLayout');
+const { getPrefix } = require('../../lib/botConfig');
 
 // Store games globally
 const games = {};
@@ -10,8 +12,9 @@ async function tictactoeCommand(sock, chatId, senderId, text) {
             room.id.startsWith('tictactoe') && 
             [room.game.playerX, room.game.playerO].includes(senderId)
         )) {
-            await sock.sendMessage(chatId, { 
-                text: '❌ You are still in a game. Type *surrender* to quit.' 
+            await sendStyled(sock, chatId, null, {
+                title: 'TICTACTOE',
+                lines: ['You are still in a game. Type surrender to quit.']
             });
             return;
         }
@@ -59,10 +62,20 @@ ${arr.slice(6).join('')}
 `;
 
             // Send message only once to the group
-            await sock.sendMessage(chatId, { 
+            await sendStyled(sock, chatId, null, {
+                title: 'TICTACTOE',
+                lines: [
+                    `Turn ☇ @${room.game.currentTurn.split('@')[0]}`,
+                    arr.slice(0, 3).join(''),
+                    arr.slice(3, 6).join(''),
+                    arr.slice(6).join(''),
+                    `Room ☇ ${room.id}`
+                ]
+            });
+            await sock.sendMessage(chatId, {
                 text: str,
                 mentions: [room.game.currentTurn, room.game.playerX, room.game.playerO]
-            });
+            }).catch(() => {});
 
         } else {
             // Create new room
@@ -76,8 +89,9 @@ ${arr.slice(6).join('')}
 
             if (text) room.name = text;
 
-            await sock.sendMessage(chatId, { 
-                text: `⏳ *Waiting for opponent*\nType *.ttt ${text || ''}* to join!`
+            await sendStyled(sock, chatId, null, {
+                title: 'TICTACTOE',
+                lines: [`Waiting for opponent.`, `Type ${getPrefix()}ttt ${text || ''} to join.`]
             });
 
             games[room.id] = room;
@@ -85,8 +99,9 @@ ${arr.slice(6).join('')}
 
     } catch (error) {
         console.error('Error in tictactoe command:', error);
-        await sock.sendMessage(chatId, { 
-            text: '❌ Error starting game. Please try again.' 
+        await sendStyled(sock, chatId, null, {
+            title: 'TICTACTOE',
+            lines: ['Error starting game. Please try again.']
         });
     }
 }
@@ -108,8 +123,9 @@ async function handleTicTacToeMove(sock, chatId, senderId, text) {
 
         // Allow surrender at any time, not just during player's turn
         if (senderId !== room.game.currentTurn && !isSurrender) {
-            await sock.sendMessage(chatId, { 
-                text: '❌ Not your turn!' 
+            await sendStyled(sock, chatId, null, {
+                title: 'TICTACTOE',
+                lines: ['Not your turn.']
             });
             return;
         }
@@ -120,8 +136,9 @@ async function handleTicTacToeMove(sock, chatId, senderId, text) {
         );
 
         if (!ok) {
-            await sock.sendMessage(chatId, { 
-                text: '❌ Invalid move! That position is already taken.' 
+            await sendStyled(sock, chatId, null, {
+                title: 'TICTACTOE',
+                lines: ['Invalid move. That position is already taken.']
             });
             return;
         }

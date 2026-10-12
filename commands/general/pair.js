@@ -1,157 +1,168 @@
-const axios = require('axios');
-const settings = require('../../settings');
-const { sleep } = require('../../lib/myfunc');
+const { getConfig, getPrefix } = require('../../lib/botConfig');
+const { pairAndStart, listSessions, normalizePhone } = require('../../lib/sessionManager');
 const { storeLinkedUser } = require('../../lib/mongoStore');
+const { sendStyled } = require('../../lib/menuLayout');
+const isOwnerOrSudo = require('../../lib/isOwner');
 
-function normalizeHost(value) {
-    if (!value) return null;
-    const trimmed = String(value).trim();
-    if (!trimmed) return null;
-    if (/^https?:\/\//i.test(trimmed)) return trimmed.replace(/\/$/, '');
-    if (/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(trimmed)) return `https://${trimmed}`;
-    return null;
-}
-
-function getDynamicPairHosts() {
-    const hosts = [
-        process.env.PAIR_API_BASE,
-        settings.pairApiBase,
-        process.env.DEPLOYMENT_HOST,
-        process.env.RENDER_EXTERNAL_URL,
-        process.env.RAILWAY_STATIC_URL,
-        process.env.RAILWAY_PUBLIC_DOMAIN,
-        process.env.KOYEB_PUBLIC_DOMAIN,
-        process.env.CYCLIC_URL,
-        process.env.URL,
-        process.env.VERCEL_URL
-    ];
-
-    if (process.env.REPLIT_DOMAINS) {
-        hosts.push(...String(process.env.REPLIT_DOMAINS).split(','));
-    }
-
-    hosts.push('https://knight-bot-paircode.onrender.com');
-
-    const normalized = hosts
-        .map(normalizeHost)
-        .filter(Boolean);
-
-    return [...new Set(normalized)];
-}
-
-function channelContext() {
-    return {
-        contextInfo: {
-            forwardingScore: 1,
-            isForwarded: true,
-            forwardedNewsletterMessageInfo: {
-                newsletterJid: settings.newsletterJid || '120363269950668068@newsletter',
-                newsletterName: 'GODS ZEAL XMD',
-                serverMessageId: -1
-            }
-        }
-    };
-}
-
-async function requestCode(number) {
-    const pairHosts = getDynamicPairHosts();
-    for (const base of pairHosts) {
-        try {
-            const response = await axios.get(`${base.replace(/\/$/, '')}/code`, {
-                params: { number },
-                timeout: 25000
-            });
-            const code = response?.data?.code;
-            if (code && code !== 'Service Unavailable') return code;
-        } catch {
-            // continue with next host
-        }
-    }
-    throw new Error('All pairing hosts failed');
+function canUsePair(senderId, fromMe) {
+    const cfg = getConfig();
+    if (fromMe) return true;
+    const access = String(cfg.pairAccess || 'public').toLowerCase();
+    return access === 'public';
 }
 
 async function pairCommand(sock, chatId, message, q) {
     try {
-        if (!q) {
-            return await sock.sendMessage(chatId, {
-                text: 'Please provide valid WhatsApp number\nExample: .pair 234xxxxxxxxxx',
-                ...channelContext()
-            }, { quoted: message });
+        const senderId = message.key.participant || message.key.remoteJid;
+        const owner = message.key.fromMe || await isOwnerOrSudo(senderId, sock, chatId);
+        if (!canUsePair(senderId, owner)) {
+            await sendStyled(sock, chatId, message, {
+                title: 'PAIR',
+                lines: ['Pairing is restricted.', 'Set pairAccess to public in bot.json.']
+            });
+            return;
         }
 
-        const numbers = q.split(',')
-            .map((v) => v.replace(/[^0-9]/g, ''))
+        const prefix = getPrefix();
+        const cfg = getConfig();
+        if (!q) {
+            await sendStyled(sock, chatId, message, {
+                title: 'PAIR SESSION',
+                lines: [
+                    `Usage ☇ ${prefix}pair 234xxxxxxxxxx`,
+                    'Enter the full number without + or spaces.',
+                    'A successful pair starts an isolated session immediately.'
+                ]
+            });
+            return;
+        }
+
+        const numbers = String(q).split(',')
+            .map((v) => normalizePhone(v))
             .filter((v) => v.length > 5 && v.length < 20);
 
         if (!numbers.length) {
-            return await sock.sendMessage(chatId, {
-                text: 'Invalid number. Please use the correct format.',
-                ...channelContext()
-            }, { quoted: message });
+            await sendStyled(sock, chatId, message, {
+                title: 'PAIR SESSION',
+                lines: [`Invalid number. Example: ${prefix}pair 234xxxxxxxxxx`]
+            });
+            return;
         }
 
         for (const number of numbers) {
             const whatsappID = `${number}@s.whatsapp.net`;
-            const result = await sock.onWhatsApp(whatsappID);
+            try {
+                const result = await sock.onWhatsApp(whatsappID);
+                if (!result?.[0]?.exists) {
+                    await sendStyled(sock, chatId, message, {
+                        title: 'PAIR SESSION',
+                        lines: [`${number} is not registered on WhatsApp.`]
+                    });
+                    continue;
+                }
+            } catch {}
 
-            if (!result?.[0]?.exists) {
-                await sock.sendMessage(chatId, {
-                    text: `That number is not registered on WhatsApp: ${number}`,
-                    ...channelContext()
-                }, { quoted: message });
-                continue;
-            }
-
-            await sock.sendMessage(chatId, {
-                text: `Generating pairing code for ${number}...`,
-                ...channelContext()
-            }, { quoted: message });
+            await sendStyled(sock, chatId, message, {
+                title: 'PAIR SESSION',
+                lines: [`Starting isolated session for ${number}...`]
+            });
 
             try {
-                const code = await requestCode(number);
+                const paired = await pairAndStart(number, {
+                    requestedBy: senderId,
+                    chatId
+                });
 
-                await sleep(1200);
                 await storeLinkedUser({
                     phone: number,
                     jid: whatsappID,
                     source: 'pair_command',
-                    requestedBy: message.key.participant || message.key.remoteJid,
+                    requestedBy: senderId,
                     chatId,
+                    sessionId: paired.sessionId || paired.session?.id,
                     requestedAt: new Date().toISOString()
-                });
+                }).catch(() => {});
 
-                await sock.sendMessage(chatId, {
-                    text: [
-                        '✅ *Pairing Code Generated*',
-                        '',
-                        `📱 Number: ${number}`,
-                        `🔐 Code: ${code}`,
-                        '',
-                        'Tap a button below to copy the code or open follow links.'
-                    ].join('\n'),
-                    buttons: [
-                        { buttonId: `copy_pair:${code}`, buttonText: { displayText: '📋 Copy Code' }, type: 1 },
-                        { buttonId: '.chfollow 1 https://whatsapp.com/channel/0029VaXKAEoKmCPS6Jz7sw0N', buttonText: { displayText: '📢 Follow Channel' }, type: 1 },
-                        { buttonId: 'support', buttonText: { displayText: '👥 Join Support Group' }, type: 1 }
+                if (paired.alreadyConnected) {
+                    await sendStyled(sock, chatId, message, {
+                        title: 'PAIR SESSION',
+                        lines: [
+                            `${number} is already connected.`,
+                            `Session ☇ ${paired.session.id}`
+                        ]
+                    });
+                    continue;
+                }
+
+                if (paired.alreadyRegistered) {
+                    await sendStyled(sock, chatId, message, {
+                        title: cfg.botName,
+                        lines: [
+                            'Session started',
+                            `Number ☇ ${number}`,
+                            `Session ☇ ${paired.sessionId}`,
+                            'Commands work immediately on that isolated session.'
+                        ]
+                    });
+                    continue;
+                }
+
+                await sendStyled(sock, chatId, message, {
+                    title: 'PAIRING CODE READY',
+                    lines: [
+                        `Number ☇ ${number}`,
+                        `Code ☇ ${paired.code}`,
+                        `Session ☇ ${paired.sessionId}`,
+                        'WhatsApp > Linked Devices > Link with phone number',
+                        'The session starts immediately after a successful pair.',
+                        'This session is isolated from other numbers.'
                     ],
-                    headerType: 1,
-                    ...channelContext()
-                }, { quoted: message });
+                    buttons: [
+                        { buttonId: `copy_pair:${paired.code}`, buttonText: { displayText: 'copy code' }, type: 1 },
+                        { buttonId: `${prefix}menu`, buttonText: { displayText: 'menu' }, type: 1 },
+                        { buttonId: `${prefix}owner`, buttonText: { displayText: 'owner' }, type: 1 }
+                    ]
+                });
             } catch (apiError) {
-                console.error('Pair API error:', apiError.message);
-                await sock.sendMessage(chatId, {
-                    text: 'Failed to generate pairing code. Pair host is unreachable right now; try again shortly.',
-                    ...channelContext()
-                }, { quoted: message });
+                console.error('Pair session error:', apiError.message);
+                await sendStyled(sock, chatId, message, {
+                    title: 'PAIR FAILED',
+                    lines: [`${number}`, String(apiError.message || 'Could not start pairing')]
+                });
             }
         }
     } catch (error) {
         console.error('Pair command error:', error);
-        await sock.sendMessage(chatId, {
-            text: 'An error occurred while generating the pairing code.',
-            ...channelContext()
-        }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'PAIR FAILED',
+            lines: ['An error occurred while starting the pairing session.']
+        });
     }
 }
 
+async function sessionsCommand(sock, chatId, message) {
+    const senderId = message.key.participant || message.key.remoteJid;
+    const owner = message.key.fromMe || await isOwnerOrSudo(senderId, sock, chatId);
+    if (!owner) {
+        await sendStyled(sock, chatId, message, {
+            title: 'SESSIONS',
+            lines: ['Only the owner can list sessions.']
+        });
+        return;
+    }
+    const rows = listSessions();
+    if (!rows.length) {
+        await sendStyled(sock, chatId, message, {
+            title: 'ACTIVE SESSIONS',
+            lines: ['No extra sessions yet.', 'Use pair <number> to add one.']
+        });
+        return;
+    }
+    await sendStyled(sock, chatId, message, {
+        title: 'ACTIVE SESSIONS',
+        lines: rows.map((row) => `${row.phone || row.id} ☇ ${row.status}`)
+    });
+}
+
 module.exports = pairCommand;
+module.exports.sessionsCommand = sessionsCommand;

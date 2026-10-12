@@ -8,6 +8,8 @@ const webp = require('node-webpmux');
 const crypto = require('crypto');
 const { exec } = require('child_process');
 const settings = require('../../settings');
+const { sendStyled } = require('../../lib/menuLayout');
+const { getPrefix } = require('../../lib/botConfig');
 
 async function stickerTelegramCommand(sock, chatId, msg) {
     try {
@@ -18,16 +20,18 @@ async function stickerTelegramCommand(sock, chatId, msg) {
         const args = text.split(' ').slice(1);
         
         if (!args[0]) {
-            await sock.sendMessage(chatId, { 
-                text: '⚠️ Please enter the Telegram sticker URL!\n\nExample: .tg https://t.me/addstickers/Porcientoreal' 
+            await sendStyled(sock, chatId, msg, {
+                title: 'TG STICKER',
+                lines: ['Please enter the Telegram sticker URL.', `Example ☇ ${getPrefix()}tg https://t.me/addstickers/Porcientoreal`]
             });
             return;
         }
 
         // Validate URL format
         if (!args[0].match(/(https:\/\/t.me\/addstickers\/)/gi)) {
-            await sock.sendMessage(chatId, { 
-                text: '❌ Invalid URL! Make sure it\'s a Telegram sticker URL.' 
+            await sendStyled(sock, chatId, msg, {
+                title: 'TG STICKER',
+                lines: ['Invalid URL. Make sure it is a Telegram sticker URL.']
             });
             return;
         }
@@ -62,8 +66,9 @@ async function stickerTelegramCommand(sock, chatId, msg) {
             }
 
             // Send initial message with sticker count
-            await sock.sendMessage(chatId, { 
-                text: `📦 Found ${stickerSet.result.stickers.length} stickers\n⏳ Starting download...` 
+            await sendStyled(sock, chatId, msg, {
+                title: 'TG STICKER',
+                lines: [`Found ${stickerSet.result.stickers.length} stickers.`, 'Starting download.']
             });
 
             // Create temp directory if it doesn't exist
@@ -167,8 +172,9 @@ async function stickerTelegramCommand(sock, chatId, msg) {
             }
 
             // Only send completion message at the end
-            await sock.sendMessage(chatId, { 
-                text: `✅ Successfully downloaded ${successCount}/${stickerSet.result.stickers.length} stickers!` 
+            await sendStyled(sock, chatId, msg, {
+                title: 'TG STICKER',
+                lines: [`Successfully downloaded ${successCount}/${stickerSet.result.stickers.length} stickers.`]
             });
 
         } catch (error) {
@@ -177,8 +183,9 @@ async function stickerTelegramCommand(sock, chatId, msg) {
 
     } catch (error) {
         console.error('Error in stickertelegram command:', error);
-        await sock.sendMessage(chatId, { 
-            text: '❌ Failed to process Telegram stickers!\nMake sure:\n1. The URL is correct\n2. The sticker pack exists\n3. The sticker pack is public' 
+        await sendStyled(sock, chatId, msg, {
+            title: 'TG STICKER',
+            lines: ['Failed to process Telegram stickers.', 'Make sure the URL is correct, the pack exists, and it is public.']
         });
     }
 }

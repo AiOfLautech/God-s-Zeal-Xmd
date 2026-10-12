@@ -1,7 +1,11 @@
-async function unmuteCommand(sock, chatId) {
-    await sock.groupSettingUpdate(chatId, 'not_announcement'); // Unmute the group
-    await sock.sendMessage(chatId, { text: 'The group has been unmuted.' });
+const { sendStyled } = require('../../lib/menuLayout');
+
+async function unmuteCommand(sock, chatId, message) {
+    await sock.groupSettingUpdate(chatId, 'not_announcement');
+    await sendStyled(sock, chatId, message, {
+        title: 'UNMUTE',
+        lines: ['The group has been unmuted.']
+    });
 }
 
 module.exports = unmuteCommand;
-

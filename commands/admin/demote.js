@@ -1,11 +1,13 @@
 ﻿const isAdmin = require('../../lib/isAdmin');
+const { sendStyled } = require('../../lib/menuLayout');
 
 async function demoteCommand(sock, chatId, mentionedJids, message) {
     try {
         // First check if it's a group
         if (!chatId.endsWith('@g.us')) {
-            await sock.sendMessage(chatId, { 
-                text: 'This command can only be used in groups!'
+            await sendStyled(sock, chatId, message, {
+                title: 'DEMOTE',
+                lines: ['This command can only be used in groups.']
             });
             return;
         }
@@ -15,22 +17,25 @@ async function demoteCommand(sock, chatId, mentionedJids, message) {
             const adminStatus = await isAdmin(sock, chatId, message.key.participant || message.key.remoteJid);
             
             if (!adminStatus.isBotAdmin) {
-                await sock.sendMessage(chatId, { 
-                    text: '❌ Error: Please make the bot an admin first to use this command.'
+                await sendStyled(sock, chatId, message, {
+                    title: 'DEMOTE',
+                    lines: ['Please make the bot an admin first.']
                 });
                 return;
             }
 
             if (!adminStatus.isSenderAdmin) {
-                await sock.sendMessage(chatId, { 
-                    text: '❌ Error: Only group admins can use the demote command.'
+                await sendStyled(sock, chatId, message, {
+                    title: 'DEMOTE',
+                    lines: ['Only group admins can use the demote command.']
                 });
                 return;
             }
         } catch (adminError) {
             console.error('Error checking admin status:', adminError);
-            await sock.sendMessage(chatId, { 
-                text: '❌ Error: Please make sure the bot is an admin of this group.'
+            await sendStyled(sock, chatId, message, {
+                title: 'DEMOTE',
+                lines: ['Please make sure the bot is an admin of this group.']
             });
             return;
         }
@@ -48,8 +53,9 @@ async function demoteCommand(sock, chatId, mentionedJids, message) {
         
         // If no user found through either method
         if (userToDemote.length === 0) {
-            await sock.sendMessage(chatId, { 
-                text: '❌ Error: Please mention the user or reply to their message to demote!'
+            await sendStyled(sock, chatId, message, {
+                title: 'DEMOTE',
+                lines: ['Mention the user or reply to their message.']
             });
             return;
         }
@@ -73,25 +79,34 @@ async function demoteCommand(sock, chatId, mentionedJids, message) {
             `👑 *Demoted By:* @${message.key.participant ? message.key.participant.split('@')[0] : message.key.remoteJid.split('@')[0]}\n\n` +
             `🗓️ *Date:* ${new Date().toLocaleString()}`;
         
-        await sock.sendMessage(chatId, { 
-            text: demotionMessage,
-            mentions: [...userToDemote, message.key.participant || message.key.remoteJid]
+        await sendStyled(sock, chatId, message, {
+            title: 'DEMOTE',
+            lines: [
+                `Demoted ☇ ${usernames.join(', ')}`,
+                `By ☇ @${(message.key.participant || message.key.remoteJid).split('@')[0]}`
+            ]
         });
+        await sock.sendMessage(chatId, {
+            text: usernames.join(' '),
+            mentions: [...userToDemote, message.key.participant || message.key.remoteJid]
+        }).catch(() => {});
     } catch (error) {
         console.error('Error in demote command:', error);
         if (error.data === 429) {
             await new Promise(resolve => setTimeout(resolve, 2000));
             try {
-                await sock.sendMessage(chatId, { 
-                    text: '❌ Rate limit reached. Please try again in a few seconds.'
+                await sendStyled(sock, chatId, message, {
+                    title: 'DEMOTE',
+                    lines: ['Rate limit reached. Please try again.']
                 });
             } catch (retryError) {
                 console.error('Error sending retry message:', retryError);
             }
         } else {
             try {
-                await sock.sendMessage(chatId, { 
-                    text: '❌ Failed to demote user(s). Make sure the bot is admin and has sufficient permissions.'
+                await sendStyled(sock, chatId, message, {
+                    title: 'DEMOTE',
+                    lines: ['Failed to demote user(s). Make sure the bot is admin.']
                 });
             } catch (sendError) {
                 console.error('Error sending error message:', sendError);

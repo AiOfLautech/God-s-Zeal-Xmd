@@ -7,10 +7,19 @@ npm-cache/
 # Runtime data
 tmp/
 temp/
+baileys_store.json
 
 # Session files
 session/
 session/**
+sessions/
+data/sessions.json
+
+# Local databases and backups
+data/*.db
+data/*.db-*
+data/*.bak
+data/*corrupt*
 
 # Environment variables
 .env

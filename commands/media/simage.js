@@ -4,6 +4,8 @@ const fsPromises = require('fs/promises');
 const fse = require('fs-extra');
 const path = require('path');
 const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
+const { sendStyled } = require('../../lib/menuLayout');
+const { getPrefix } = require('../../lib/botConfig');
 
 const tempDir = './temp';
 if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
@@ -16,14 +18,17 @@ const scheduleFileDeletion = (filePath) => {
         } catch (error) {
             console.error(`Failed to delete file:`, error);
         }
-    }, 10000); // 5 minutes
+    }, 10000);
 };
 
-const convertStickerToImage = async (sock, quotedMessage, chatId) => {
+const convertStickerToImage = async (sock, quotedMessage, chatId, message) => {
     try {
         const stickerMessage = quotedMessage.stickerMessage;
         if (!stickerMessage) {
-            await sock.sendMessage(chatId, { text: 'Reply to a sticker with .simage to convert it.' });
+            await sendStyled(sock, chatId, message, {
+                title: 'SIMAGE',
+                lines: [`Reply to a sticker with ${getPrefix()}simage to convert it.`]
+            });
             return;
         }
 
@@ -38,15 +43,17 @@ const convertStickerToImage = async (sock, quotedMessage, chatId) => {
         await sharp(stickerFilePath).toFormat('png').toFile(outputImagePath);
 
         const imageBuffer = await fsPromises.readFile(outputImagePath);
-        await sock.sendMessage(chatId, { image: imageBuffer, caption: 'Here is the converted image!' });
+        await sock.sendMessage(chatId, { image: imageBuffer, caption: 'Converted image' });
 
         scheduleFileDeletion(stickerFilePath);
         scheduleFileDeletion(outputImagePath);
     } catch (error) {
         console.error('Error converting sticker to image:', error);
-        await sock.sendMessage(chatId, { text: 'An error occurred while converting the sticker.' });
+        await sendStyled(sock, chatId, message, {
+            title: 'SIMAGE',
+            lines: ['An error occurred while converting the sticker.']
+        });
     }
 };
 
 module.exports = convertStickerToImage;
-

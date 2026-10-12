@@ -1,4 +1,6 @@
 const fs = require('fs');
+const { sendStyled } = require('../../lib/menuLayout');
+const { getPrefix } = require('../../lib/botConfig');
 
 const ANTICALL_PATH = './data/anticall.json';
 
@@ -23,23 +25,34 @@ function writeState(enabled) {
 async function anticallCommand(sock, chatId, message, args) {
     const state = readState();
     const sub = (args || '').trim().toLowerCase();
+    const prefix = getPrefix();
 
     if (!sub || (sub !== 'on' && sub !== 'off' && sub !== 'status')) {
-        await sock.sendMessage(chatId, { text: '*ANTICALL*\n\n.anticall on  - Enable auto-block on incoming calls\n.anticall off - Disable anticall\n.anticall status - Show current status' }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'ANTICALL',
+            lines: [
+                `${prefix}anticall on`,
+                `${prefix}anticall off`,
+                `${prefix}anticall status`
+            ]
+        });
         return;
     }
 
     if (sub === 'status') {
-        await sock.sendMessage(chatId, { text: `Anticall is currently *${state.enabled ? 'ON' : 'OFF'}*.` }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'ANTICALL',
+            lines: [`Status ☇ ${state.enabled ? 'ON' : 'OFF'}`]
+        });
         return;
     }
 
     const enable = sub === 'on';
     writeState(enable);
-    await sock.sendMessage(chatId, { text: `Anticall is now *${enable ? 'ENABLED' : 'DISABLED'}*.` }, { quoted: message });
+    await sendStyled(sock, chatId, message, {
+        title: 'ANTICALL',
+        lines: [`Anticall is now ${enable ? 'ENABLED' : 'DISABLED'}.`]
+    });
 }
 
 module.exports = { anticallCommand, readState };
-
-
-

@@ -1,4 +1,6 @@
 const { igdl } = require("ruhend-scraper");
+const { sendStyled } = require('../../lib/menuLayout');
+const { getPrefix } = require('../../lib/botConfig');
 
 // Store processed message IDs to prevent duplicates
 const processedMessages = new Set();
@@ -49,9 +51,11 @@ async function instagramCommand(sock, chatId, message) {
         const text = message.message?.conversation || message.message?.extendedTextMessage?.text;
         
         if (!text) {
-            return await sock.sendMessage(chatId, { 
-                text: "Please provide an Instagram link for the video."
+            await sendStyled(sock, chatId, message, {
+                title: 'INSTAGRAM',
+                lines: [`Usage ☇ ${getPrefix()}ig <link>`]
             });
+            return;
         }
 
         // Check for various Instagram URL formats
@@ -66,9 +70,11 @@ async function instagramCommand(sock, chatId, message) {
         const isValidUrl = instagramPatterns.some(pattern => pattern.test(text));
         
         if (!isValidUrl) {
-            return await sock.sendMessage(chatId, { 
-                text: "That is not a valid Instagram link. Please provide a valid Instagram post, reel, or video link."
+            await sendStyled(sock, chatId, message, {
+                title: 'INSTAGRAM',
+                lines: ['That is not a valid Instagram link.']
             });
+            return;
         }
 
         await sock.sendMessage(chatId, {
@@ -78,9 +84,11 @@ async function instagramCommand(sock, chatId, message) {
         const downloadData = await igdl(text);
         
         if (!downloadData || !downloadData.data || downloadData.data.length === 0) {
-            return await sock.sendMessage(chatId, { 
-                text: "❌ No media found at the provided link. The post might be private or the link is invalid."
+            await sendStyled(sock, chatId, message, {
+                title: 'INSTAGRAM',
+                lines: ['No media found at the provided link.']
             });
+            return;
         }
 
         const mediaData = downloadData.data;

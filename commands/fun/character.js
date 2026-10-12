@@ -1,5 +1,4 @@
-﻿const axios = require('axios');
-const { channelInfo } = require('../../lib/messageConfig');
+﻿const { sendStyled } = require('../../lib/menuLayout');
 
 async function characterCommand(sock, chatId, message) {
     let userToAnalyze;
@@ -14,9 +13,9 @@ async function characterCommand(sock, chatId, message) {
     }
     
     if (!userToAnalyze) {
-        await sock.sendMessage(chatId, { 
-            text: 'Please mention someone or reply to their message to analyze their character!', 
-            ...channelInfo 
+        await sendStyled(sock, chatId, message, {
+            title: 'CHARACTER',
+            lines: ['Mention someone or reply to their message.']
         });
         return;
     }
@@ -63,18 +62,24 @@ async function characterCommand(sock, chatId, message) {
             `Note: This is a fun analysis and should not be taken seriously!`;
 
         // Send the analysis with the user's profile picture
+        await sendStyled(sock, chatId, message, {
+            title: 'CHARACTER',
+            lines: [
+                `User ☇ ${userToAnalyze.split('@')[0]}`,
+                ...traitPercentages,
+                `Overall ☇ ${Math.floor(Math.random() * 21) + 80}%`
+            ]
+        });
         await sock.sendMessage(chatId, {
             image: { url: profilePic },
             caption: analysis,
-            mentions: [userToAnalyze],
-            ...channelInfo
-        });
-
+            mentions: [userToAnalyze]
+        }).catch(() => {});
     } catch (error) {
         console.error('Error in character command:', error);
-        await sock.sendMessage(chatId, { 
-            text: 'Failed to analyze character! Try again later.',
-            ...channelInfo 
+        await sendStyled(sock, chatId, message, {
+            title: 'CHARACTER',
+            lines: ['Failed to analyze character. Try again later.']
         });
     }
 }

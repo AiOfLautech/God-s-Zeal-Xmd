@@ -6,6 +6,8 @@
 const fs = require('fs');
 const path = require('path');
 const isOwnerOrSudo = require('../../lib/isOwner');
+const { sendStyled } = require('../../lib/menuLayout');
+const { getPrefix } = require('../../lib/botConfig');
 
 // Path to store the configuration
 const configPath = path.join(__dirname, '..', '..', 'data', 'autotyping.json');
@@ -25,17 +27,9 @@ async function autotypingCommand(sock, chatId, message) {
         const isOwner = await isOwnerOrSudo(senderId, sock, chatId);
         
         if (!message.key.fromMe && !isOwner) {
-            await sock.sendMessage(chatId, {
-                text: '❌ This command is only available for the owner!',
-                contextInfo: {
-                    forwardingScore: 1,
-                    isForwarded: true,
-                    forwardedNewsletterMessageInfo: {
-                        newsletterJid: '120363269950668068@newsletter',
-                        newsletterName: 'GODSZEAL XMD',
-                        serverMessageId: -1
-                    }
-                }
+            await sendStyled(sock, chatId, message, {
+                title: 'AUTOTYPING',
+                lines: ['This command is only available for the owner.']
             });
             return;
         }
@@ -56,17 +50,9 @@ async function autotypingCommand(sock, chatId, message) {
             } else if (action === 'off' || action === 'disable') {
                 config.enabled = false;
             } else {
-                await sock.sendMessage(chatId, {
-                    text: '❌ Invalid option! Use: .autotyping on/off',
-                    contextInfo: {
-                        forwardingScore: 1,
-                        isForwarded: true,
-                        forwardedNewsletterMessageInfo: {
-                            newsletterJid: '120363269950668068@newsletter',
-                            newsletterName: 'GODSZEAL XMD',
-                            serverMessageId: -1
-                        }
-                    }
+                await sendStyled(sock, chatId, message, {
+                    title: 'AUTOTYPING',
+                    lines: [`Usage ☇ ${getPrefix()}autotyping on/off`]
                 });
                 return;
             }
@@ -79,8 +65,12 @@ async function autotypingCommand(sock, chatId, message) {
         fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
         
         // Send confirmation message
+        await sendStyled(sock, chatId, message, {
+            title: 'AUTOTYPING',
+            lines: [`Auto-typing has been ${config.enabled ? 'enabled' : 'disabled'}.`]
+        });
         await sock.sendMessage(chatId, {
-            text: `✅ Auto-typing has been ${config.enabled ? 'enabled' : 'disabled'}!`,
+            text: `Auto-typing ${config.enabled ? 'ON' : 'OFF'}`,
             contextInfo: {
                 forwardingScore: 1,
                 isForwarded: true,
@@ -94,17 +84,9 @@ async function autotypingCommand(sock, chatId, message) {
         
     } catch (error) {
         console.error('Error in autotyping command:', error);
-        await sock.sendMessage(chatId, {
-            text: '❌ Error processing command!',
-            contextInfo: {
-                forwardingScore: 1,
-                isForwarded: true,
-                forwardedNewsletterMessageInfo: {
-                    newsletterJid: '120363269950668068@newsletter',
-                    newsletterName: 'GODSZEAL XMD',
-                    serverMessageId: -1
-                }
-            }
+        await sendStyled(sock, chatId, message, {
+            title: 'AUTOTYPING',
+            lines: ['Error processing command.']
         });
     }
 }

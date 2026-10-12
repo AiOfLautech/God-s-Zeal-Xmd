@@ -1,4 +1,5 @@
 const axios = require('axios');
+const { sendStyled } = require('../../lib/menuLayout');
 
 async function quoteCommand(sock, chatId, message) {
     try {
@@ -13,12 +14,16 @@ async function quoteCommand(sock, chatId, message) {
             }
         } catch {}
 
-        await sock.sendMessage(chatId, {
-            text: `*QUOTE OF THE MOMENT*\n\n"${text}"\n\n- ${author}`
-        }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'QUOTE',
+            lines: [`"${text}"`, `- ${author}`]
+        });
     } catch (error) {
         console.error('Error in quote command:', error);
-        await sock.sendMessage(chatId, { text: 'Failed to fetch a quote.' }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'QUOTE',
+            lines: ['Failed to fetch a quote.']
+        });
     }
 }
 

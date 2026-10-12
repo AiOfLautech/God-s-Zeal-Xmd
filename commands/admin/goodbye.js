@@ -1,11 +1,15 @@
 ﻿const { handleGoodbye } = require('../../lib/welcome');
 const { isGoodByeOn, getGoodbye } = require('../../lib/index');
 const fetch = require('node-fetch');
+const { sendStyled } = require('../../lib/menuLayout');
 
 async function goodbyeCommand(sock, chatId, message, match) {
     // Check if it's a group
     if (!chatId.endsWith('@g.us')) {
-        await sock.sendMessage(chatId, { text: 'This command can only be used in groups.' });
+        await sendStyled(sock, chatId, message, {
+            title: 'GOODBYE',
+            lines: ['This command can only be used in groups.']
+        });
         return;
     }
 

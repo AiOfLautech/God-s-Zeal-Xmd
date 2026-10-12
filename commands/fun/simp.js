@@ -1,4 +1,5 @@
 ﻿const fetch = require('node-fetch');
+const { sendStyled } = require('../../lib/menuLayout');
 
 async function simpCommand(sock, chatId, quotedMsg, mentionedJid, sender) {
     try {
@@ -46,17 +47,9 @@ async function simpCommand(sock, chatId, quotedMsg, mentionedJid, sender) {
 
     } catch (error) {
         console.error('Error in simp command:', error);
-        await sock.sendMessage(chatId, { 
-            text: '❌ Sorry, I couldn\'t generate the simp card. Please try again later!',
-            contextInfo: {
-                forwardingScore: 1,
-                isForwarded: true,
-                forwardedNewsletterMessageInfo: {
-                    newsletterJid: '120363269950668068@newsletter',
-                    newsletterName: 'GODS ZEAL XMD',
-                    serverMessageId: -1
-                }
-            }
+        await sendStyled(sock, chatId, null, {
+            title: 'SIMP',
+            lines: ['Could not generate the simp card. Please try again later.']
         });
     }
 }

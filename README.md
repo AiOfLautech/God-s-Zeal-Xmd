@@ -1,36 +1,103 @@
-# 𝐆𝐎𝐃𝐒𝐙𝐄𝐀𝐋 𝐗𝐌𝐃
-# FIX ALL ISSUES, DON'T MAKE USE OF SESSION ID, JUST DOWNLOAD THE ZIP FILE AND UPLOAD TO TERMINAL THEN RUN IT WILL REQUEST FOR YOUR PHONE NUMBER 🙂 🙂
+# GODSZEAL XMD
 
-
-<!-- HEADER WITH TYPING SVG AND BOT IMAGE -->
 <div align="center">
-  <a href="https://git.io/typing-svg"> 
-    <img src="https://readme-typing-svg.demolab.com?font=Orbitron&size=56&pause=500&color=33FF00&center=true&width=900&height=120&lines=𝐆𝐎𝐃𝐒𝐙𝐄𝐀𝐋+𝐗𝐌𝐃;Multi-Device+WhatsApp+Bot;All+Deployment+Errors+Fixed" alt="Typing SVG"/>
+  <a href="https://git.io/typing-svg">
+    <img src="https://readme-typing-svg.demolab.com?font=Orbitron&size=48&pause=500&color=33FF00&center=true&width=900&height=100&lines=GODSZEAL+XMD+v3.2.0;Baileys+v7+Pairing;Styled+Menus+%2B+Isolated+Sessions" alt="Typing SVG"/>
   </a>
-  <br/><br/>
+  <br/>
   <div style="display:inline-block;padding:12px;border-radius:50%;box-shadow:0 8px 32px 0 #33333380;background:linear-gradient(135deg,#33FF00 45%,#00BFFF 100%);">
-    <img src="https://raw.githubusercontent.com/AiOfLautech/God-s-Zeal-Xmd/main/assets/bot_image.jpg" alt="𝐆𝐎𝐃𝐒𝐙𝐄𝐀𝐋 𝐗𝐌𝐃" height="220" style="border-radius:50%;border:5px solid #00BFFF;" />
+    <img src="https://raw.githubusercontent.com/AiOfLautech/God-s-Zeal-Xmd/main/assets/bot_image.jpg" alt="GODSZEAL XMD" height="220" style="border-radius:50%;border:5px solid #00BFFF;" />
   </div>
-</div>
-
----
-
-## 📊 GitHub Repo Stats
-
-<div align="center">
+  <br/><br/>
+  <img src="https://img.shields.io/badge/version-3.2.0-33FF00?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Baileys-7.0.0--rc14-00BFFF?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/prefix-.-yellow?style=for-the-badge" />
   <img src="https://img.shields.io/github/stars/AiOfLautech/God-s-Zeal-Xmd?style=for-the-badge&color=yellow&label=Stars" />
   <img src="https://img.shields.io/github/forks/AiOfLautech/God-s-Zeal-Xmd?style=for-the-badge&color=blue&label=Forks" />
-  <img src="https://img.shields.io/github/last-commit/AiOfLautech/God-s-Zeal-Xmd?style=for-the-badge&color=red&label=Last%20Update" />
-  <img src="https://komarev.com/ghpvc/?username=AiOfLautech&color=brightgreen&style=for-the-badge&label=Repo%20Views" />
-  <img src="https://img.shields.io/github/downloads/AiOfLautech/God-s-Zeal-Xmd/HEAD.zip?style=for-the-badge&color=orange&label=ZIP%20Downloads" />
 </div>
 
 ---
 
-## 🚀 Deployment Guide
+## Changelog
 
-<details align="center">
-  <summary><strong>Step 1: Fork Repository</strong></summary>
+<details open>
+  <summary><strong>v3.2.0 - Styled menus, pairing, and group stories</strong></summary>
+  <br/>
+
+  | Area | What changed |
+  |------|----------------|
+  | Identity | Live config now lives in `bot.json` and reloads through `lib/botConfig.js` |
+  | Pairing | Baileys v7 pairing. Extra users get isolated sessions under `sessions/` |
+  | Menu | `.menu` lists every command in one message, including MISC |
+  | Buttons | Button / newmenu style uses the location-button layout. `gifted-btns` was removed so a second menu is no longer sent |
+  | Image | Valid local `assets/bot_image.jpg` with URL fallback from `bot.json` / `data/menuImage.json` |
+  | Replies | Command replies use the shared ASCII `sendStyled` box |
+  | Group stories | `.gcstatus` posts group status silently with ⏳ / ✅ / ❌ reacts |
+  | Owner | `.setprefix`, `.setmenu`, `.sessions` |
+  | Public | `.pair <number>` starts an isolated extra session |
+
+</details>
+
+<details>
+  <summary><strong>Command catalog added in v3.2.0</strong></summary>
+  <br/>
+
+  | Category | Commands |
+  |----------|----------|
+  | GENERAL | menu, help, ping, alive, owner, pair, settings, jid, tts, weather, news, lyrics, ss, translate, url, vv, script, git |
+  | ADMIN | ban, unban, kick, promote, demote, mute, unmute, tagall, hidetag, warn, antilink, welcome, goodbye, gcstatus, groupinfo, staff |
+  | OWNER | setprefix, setmenu, sessions, mode, update, setpp, autostatus, anticall, autoread, autotyping, antidelete, sudo |
+  | MEDIA | sticker, take, play, song, video, tiktok, instagram, facebook, remini, removebg, blur, emojimix |
+  | AI | gpt, gemini, imagine, flux, dalle, sora |
+  | FUN | truth, dare, joke, quote, fact, meme, flirt, ship, character, 8ball |
+  | MISC | misc, heart, horny, circle, lgbt, lied, lolice, simpcard, tonikawa, its-so-stupid, namecard, oogway, tweet, ytcomment, jail, triggered |
+  | GAMES | tictactoe, hangman, trivia, topmembers |
+  | TEXTMAKER | metallic, ice, snow, neon, devil, thunder, glitch, fire, blackpink |
+  | ANIME | animu, hug, pat, kiss, pies, china, japan, korea, india |
+  | ECONOMY | economy, balance, daily, work, deposit, withdraw, leaderboard, profile |
+
+</details>
+
+<details>
+  <summary><strong>Menu styles</strong></summary>
+  <br/>
+
+  Owner command: `.setmenu <style>`
+
+  | Style | Result |
+  |-------|--------|
+  | `button` | Location header + menu / script / owner buttons + full ASCII catalog |
+  | `newmenu` | Same location-button payload as `button` |
+  | `normal` | Image + ASCII catalog |
+  | `box` | Boxed ASCII reply |
+  | `classic` | Classic text menu |
+  | `compact` | One-line command groups |
+
+  Dynamic menu image: set `menuImage` in `bot.json` or `url` in `data/menuImage.json`. If empty, the bot uses `assets/bot_image.jpg`.
+
+</details>
+
+<details>
+  <summary><strong>Pairing and sessions</strong></summary>
+  <br/>
+
+  1. Start the bot: `node index.js`
+  2. Enter the WhatsApp number when asked, or set `global.phoneNumber` before require
+  3. Enter the pairing code on that WhatsApp account
+  4. Extra users can run `.pair 234xxxxxxxxxx`
+  5. Extra sessions are stored under `sessions/user-<number>/` and restored on restart
+  6. Owner can inspect them with `.sessions`
+
+  Primary session stays in `./session`. Extra pair sessions never share that auth folder.
+
+</details>
+
+---
+
+## Deploy
+
+<details>
+  <summary><strong>1. Fork the repository</strong></summary>
   <p align="center">
     <a href="https://github.com/AiOfLautech/God-s-Zeal-Xmd/fork">
       <img src="https://img.shields.io/badge/-FORK%20REPO-00ccff?style=for-the-badge&logo=github&logoColor=white&labelColor=black" height="40" alt="Fork Badge"/>
@@ -38,151 +105,88 @@
   </p>
 </details>
 
-<details align="center">
-  <summary><strong>Step 2: Download & Host</strong></summary>
+<details>
+  <summary><strong>2. Download ZIP and host</strong></summary>
   <p align="center">
     <a href="https://github.com/AiOfLautech/God-s-Zeal-Xmd/archive/refs/heads/main.zip">
       <img src="https://img.shields.io/badge/-DOWNLOAD%20ZIP-00ccff?style=for-the-badge&logo=github&logoColor=white&labelColor=black" height="40" alt="Download ZIP"/>
     </a>
-    <br/>
-    <img src="https://img.shields.io/github/downloads/AiOfLautech/God-s-Zeal-Xmd/HEAD.zip?style=flat-square&label=Zip%20Downloads" alt="ZIP Downloads" />
   </p>
-  <ol>
-    <li>Download ZIP archive of latest code.</li>
-    <li>Extract and upload the folder to your hosting platform.</li>
-    <li>Ensure <code>index.js</code> and <code>package.json</code> are in the root.</li>
-  </ol>
+
+  1. Download the ZIP of `main`.
+  2. Extract and upload the folder to your host.
+  3. Keep `index.js`, `package.json`, and `bot.json` in the root.
+  4. Run `npm install` then `node index.js`.
+  5. Pair with your phone number. Do not use a session ID file.
 </details>
 
-<details align="center">
-  <summary><strong>Step 3: Deploy Now</strong></summary>
+<details>
+  <summary><strong>3. Panel hosts</strong></summary>
   <p align="center">
     <a href="https://bot-hosting.net/?aff=1271743046865915927">
       <img src="https://img.shields.io/badge/-BOTHOSTING%20PANEL-D6B7D6?style=for-the-badge&logo=serverless&logoColor=black&labelColor=white" height="40" alt="Bot Hosting Panel"/>
-    </a>
-    <a href="">
-      <img src="https://img.shields.io/badge/-DEPLOY%20TUTORIAL-FF0000?style=for-the-badge&logo=youtube&logoColor=white&labelColor=black" height="40" alt="YouTube Tutorial"/>
-    </a>
-  </p>
-</details>
-
-<details align="center">
-  <summary><strong>Step 4: Deploy on Katabump with Session ID</strong></summary>
-  <p align="center">
-    <a href="https://gzpair.vercel.app">
-      <img src="https://img.shields.io/badge/-GET%20SESSION%20URL-00D9FF?style=for-the-badge&logo=whatsapp&logoColor=white&labelColor=black" height="40" alt="Get Session URL"/>
     </a>
     <a href="https://katabump.com">
       <img src="https://img.shields.io/badge/-KATABUMP%20PANEL-00D9FF?style=for-the-badge&logo=cloud&logoColor=white&labelColor=black" height="40" alt="Katabump Panel"/>
     </a>
   </p>
-  <ol>
-    <li>Visit <a href="https://gzpair.vercel.app"><strong>https://gzpair.vercel.app</strong></a> to get your session ID.</li>
-    <li>Fork the repository to your GitHub account.</li>
-    <li>Rename <code>.env.example</code> to <code>.env</code> in your local copy.</li>
-    <li>Paste your session ID into the designated placeholder in the <code>.env</code> file.</li>
-    <li>Go to <a href="https://katabump.com"><strong>Katabump Panel</strong></a> and deploy your bot.</li>
-  </ol>
 </details>
 
 ---
 
-## ✨ Key Features
-
-<div align="center">
-
-| Group Management      | Entertainment         | Utilities             | Security           |
-|----------------------|----------------------|-----------------------|--------------------|
-| Tag All, Mute/Unmute | Games, Sticker Maker | Text-to-Speech        | Admin Restricted   |
-| Anti-Link, Warn Sys  | Tic-Tac-Toe          | Broadcast, Admin Ctrl | Auto-Safety        |
-|                      |                      |                       | Anti-Spam          |
-
-</div>
-
----
-
-## 🔗 Connect With Us
-
-<div align="center">
-  <a href="https://t.me/aitoolshub01">
-    <img src="https://img.shields.io/badge/-TELEGRAM%20CHANNEL-0088cc?style=for-the-badge&logo=telegram&logoColor=white" height="35" alt="Telegram"/>
-  </a>
-  <a href="https://whatsapp.com/channel/0029Va90zAnIHO8Msp3A">
-    <img src="https://img.shields.io/badge/-WHATSAPP%20CHANNEL-25D366?style=for-the-badge&logo=whatsapp&logoColor=white" height="35" alt="WhatsApp"/>
-  </a>
-</div>
-
----
-
-## ⚙️ Setup & Installation
+## Setup
 
 ```bash
-# Clone the repository
+# Clone
 git clone https://github.com/AiOfLautech/God-s-Zeal-Xmd.git
 cd God-s-Zeal-Xmd
 
-# Install dependencies
+# Install
 npm install
 
-# Start the bot
+# Start
 node index.js
-
-# Scan the QR code with WhatsApp's Linked Devices feature
 ```
 
+Edit `bot.json` for bot name, owners, prefix, menu style, and optional `menuImage` URL. The file reloads automatically.
+
 ---
 
-## 📅 Project Timeline
+## Features
+
+| Group | Media | AI / Fun | Owner |
+|-------|-------|----------|-------|
+| Tag, mute, warn, antilink | Sticker, play, tiktok, IG, FB | GPT, Gemini, Imagine, Sora | setprefix, setmenu, sessions |
+| Welcome / goodbye | Remini, removebg, blur | Games, textmaker, misc canvas | autostatus, anticall, sudo |
+| gcstatus group stories | Pair extra numbers | Economy, anime, pies | Isolated multi-session |
+
+---
+
+## Links
+
 <div align="center">
-  <img src="https://img.shields.io/github/commit-activity/m/AiOfLautech/God-s-Zeal-Xmd?style=for-the-badge&color=purple" />
-  <img src="https://img.shields.io/github/issues-pr/AiOfLautech/God-s-Zeal-Xmd?style=for-the-badge&color=teal" />
-  <img src="https://img.shields.io/github/issues/AiOfLautech/God-s-Zeal-Xmd?style=for-the-badge&color=pink" />
-</div>
-
----
-
-### ⚠️ Legal Notice
-
-> **Important:** This is an unofficial WhatsApp bot. Using automated bots may violate WhatsApp's Terms of Service. Use at your own risk. The developers are not responsible for account bans or restrictions.
-
-**DO NOT USE FOR SPAMMING OR ILLEGAL ACTIVITIES**  
-Always comply with WhatsApp's policies and local laws.
-
----
-
-## ✨ Credits & Recognition
-
-<table>
-  <tr>
-    <td align="center">
-      <a href="https://github.com/AiOfLautech">
-        <img src="https://img.shields.io/badge/Godszeal-00ffff?style=for-the-badge&logo=github&logoColor=black" alt="godszeal">
-      </a>
-    </td>
-    <td align="center">
-      <a href="https://github.com/adiwajshing/Baileys">
-        <img src="https://img.shields.io/badge/BAILEYS-aa00ff?style=for-the-badge&logo=npm&logoColor=white" alt="Baileys">
-      </a>
-    </td>
-  </tr>
-</table>
-
-<p align="center"> 
-  <a href="https://github.com/AiOfLautech/God-s-Zeal-Xmd">
-    <img src="https://img.shields.io/badge/⭐_STAR_THIS_REPO_⭐-yellow?style=for-the-badge&logo=github" alt="Star Repo">
+  <a href="https://t.me/aitoolshub01">
+    <img src="https://img.shields.io/badge/-TELEGRAM-0088cc?style=for-the-badge&logo=telegram&logoColor=white" height="35" alt="Telegram"/>
   </a>
-</p>
-
----
-
-### 📜 License
-
-MIT © Godszeal
-
----
-
-<!-- Decorative Divider -->
-<div align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=00ff66&height=90&section=footer" style="margin-top:-30px;" />
-  <br/><sub>Styled by <a href="https://github.com/AiOfLautech">AiOfLautech</a> | Powered by ☕ & ❤️ | Last Update: 2026-02-18 04:09:59</sub>
+  <a href="https://whatsapp.com/channel/0029VaXKAEoKmCPS6Jz7sw0N">
+    <img src="https://img.shields.io/badge/-WHATSAPP%20CHANNEL-25D366?style=for-the-badge&logo=whatsapp&logoColor=white" height="35" alt="WhatsApp"/>
+  </a>
+  <a href="https://youtube.com/@Godszealtech">
+    <img src="https://img.shields.io/badge/-YOUTUBE-FF0000?style=for-the-badge&logo=youtube&logoColor=white" height="35" alt="YouTube"/>
+  </a>
 </div>
+
+---
+
+### Legal
+
+This is an unofficial WhatsApp bot. Automated clients can violate WhatsApp Terms of Service. Use at your own risk. Do not spam or run illegal activity.
+
+### Credits
+
+| | |
+|---|---|
+| [Godszeal](https://github.com/AiOfLautech) | Bot author |
+| [Baileys](https://github.com/WhiskeySockets/Baileys) | WhatsApp library |
+
+MIT (c) Godszeal

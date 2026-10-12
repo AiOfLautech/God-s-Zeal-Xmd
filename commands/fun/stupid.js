@@ -1,4 +1,5 @@
 const fetch = require('node-fetch');
+const { sendStyled } = require('../../lib/menuLayout');
 
 async function stupidCommand(sock, chatId, quotedMsg, mentionedJid, sender, args) {
     try {
@@ -41,8 +42,9 @@ async function stupidCommand(sock, chatId, quotedMsg, mentionedJid, sender, args
 
     } catch (error) {
         console.error('Error in stupid command:', error);
-        await sock.sendMessage(chatId, { 
-            text: '❌ Sorry, I couldn\'t generate the stupid card. Please try again later!'
+        await sendStyled(sock, chatId, null, {
+            title: 'STUPID',
+            lines: ['Could not generate the stupid card. Please try again later.']
         });
     }
 }

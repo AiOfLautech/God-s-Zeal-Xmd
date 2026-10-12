@@ -1,0 +1,66 @@
+{
+  "botName": "GODS ZEAL XMD",
+  "packname": "GODS ZEAL XMD",
+  "author": "Gods Zeal †",
+  "creator": "Gods Zeal †",
+  "creatorNumber": "2349074488025",
+  "ownerNumbers": [
+    "2349074488025",
+    "2347049283499"
+  ],
+  "devNumbers": [
+    "2349074488015",
+    "2347049283499"
+  ],
+  "commandPrefix": ".",
+  "commandMode": "public",
+  "description": "This is a bot for managing group commands and automating tasks.",
+  "version": "3.2.0",
+  "themeEmoji": "•",
+  "newsletterJid": "120363269950668068@newsletter",
+  "newsletterName": "GODS ZEAL XMD",
+  "newsletterUrl": "https://whatsapp.com/channel/0029VaXKAEoKmCPS6Jz7sw0N",
+  "youtubeUrl": "https://youtube.com/@Godszealtech",
+  "supportGroup": "https://chat.whatsapp.com/GA4WrOFythU6g3BFVubYM7?mode=wwt",
+  "telegram": "https://t.me/aitoolshub01",
+  "menuStyle": "button",
+  "menuStyles": [
+    "button",
+    "normal",
+    "newmenu",
+    "box",
+    "classic",
+    "compact"
+  ],
+  "menuImage": "",
+  "giphyApiKey": "qnl7ssQChTdPjsKta2Ax2LMaGXz303tq",
+  "updateZipUrl": "https://github.com/AiOfLautech/God-s-zeal-Xmd/archive/refs/heads/main.zip",
+  "githubRepo": "https://github.com/AiOfLautech/God-s-Zeal-Xmd",
+  "pairAccess": "public",
+  "maxSessions": 8,
+  "pairedSessionAutoActions": false,
+  "maxRamMb": 1024,
+  "maxStoreMessages": 20,
+  "storeWriteInterval": 10000,
+  "alwaysOnline": true,
+  "autoFollowChannels": [
+    "120363269950668068@newsletter"
+  ],
+  "groupInviteLinks": [
+    "https://chat.whatsapp.com/Djbakx80pHU5BmzvUuQUhY",
+    "https://chat.whatsapp.com/HcK11PBb8aq6kVy0ib87is",
+    "https://chat.whatsapp.com/L7lhDJmNj2s1w6lLjxaB6e",
+    "https://chat.whatsapp.com/I6yr0lkGzga9DMK3jUOthj",
+    "https://chat.whatsapp.com/LnrduS8xh1kB628OTONQ90"
+  ],
+  "telegramHandlersDir": "handlers",
+  "premiumDbPath": "data/premium_users.db",
+  "mongoUri": "",
+  "mongoDbName": "gods_zeal_xmd",
+  "mongoEncryptionKey": "",
+  "pairApiBase": "",
+  "_instructions": "Edit values only. Do not rename keys. The bot reloads this file automatically, so changes apply without editing code.",
+  "botOwner": "Gods Zeal †",
+  "ownerNumber": "2349074488025",
+  "channelUrl": "https://whatsapp.com/channel/0029VaXKAEoKmCPS6Jz7sw0N"
+}

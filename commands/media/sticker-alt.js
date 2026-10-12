@@ -1,18 +1,25 @@
 const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
 const { exec } = require('child_process');
 const fs = require('fs');
+const { sendStyled } = require('../../lib/menuLayout');
 
 async function stickerCommand(sock, chatId, message) {
     try {
         const quotedMsg = message.message.extendedTextMessage?.contextInfo?.quotedMessage;
         if (!quotedMsg) {
-            await sock.sendMessage(chatId, { text: 'Please reply to an image or video!' });
+            await sendStyled(sock, chatId, message, {
+                title: 'STICKER',
+                lines: ['Please reply to an image or video.']
+            });
             return;
         }
 
         const type = Object.keys(quotedMsg)[0];
         if (!['imageMessage', 'videoMessage'].includes(type)) {
-            await sock.sendMessage(chatId, { text: 'Please reply to an image or video!' });
+            await sendStyled(sock, chatId, message, {
+                title: 'STICKER',
+                lines: ['Please reply to an image or video.']
+            });
             return;
         }
 
@@ -54,7 +61,10 @@ async function stickerCommand(sock, chatId, message) {
 
     } catch (error) {
         console.error('Error in sticker command:', error);
-        await sock.sendMessage(chatId, { text: 'Failed to create sticker!' });
+        await sendStyled(sock, chatId, message, {
+            title: 'STICKER',
+            lines: ['Failed to create sticker.']
+        });
     }
 }
 

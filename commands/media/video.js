@@ -1,5 +1,7 @@
 const axios = require('axios');
 const yts = require('yt-search');
+const { sendStyled } = require('../../lib/menuLayout');
+const { getPrefix } = require('../../lib/botConfig');
 
 const AXIOS_DEFAULTS = {
     timeout: 60000,
@@ -67,7 +69,10 @@ async function videoCommand(sock, chatId, message) {
         
         
         if (!searchQuery) {
-            await sock.sendMessage(chatId, { text: 'What video do you want to download?' }, { quoted: message });
+            await sendStyled(sock, chatId, message, {
+                title: 'VIDEO',
+                lines: [`Usage ☇ ${getPrefix()}video <name or link>`]
+            });
             return;
         }
 
@@ -81,7 +86,10 @@ async function videoCommand(sock, chatId, message) {
             // Search YouTube for the video
             const { videos } = await yts(searchQuery);
             if (!videos || videos.length === 0) {
-                await sock.sendMessage(chatId, { text: 'No videos found!' }, { quoted: message });
+                await sendStyled(sock, chatId, message, {
+                    title: 'VIDEO',
+                    lines: ['No videos found.']
+                });
                 return;
             }
             videoUrl = videos[0].url;
@@ -106,7 +114,10 @@ async function videoCommand(sock, chatId, message) {
         // Validate YouTube URL
         let urls = videoUrl.match(/(?:https?:\/\/)?(?:youtu\.be\/|(?:www\.|m\.)?youtube\.com\/(?:watch\?v=|v\/|embed\/|shorts\/|playlist\?list=)?)([a-zA-Z0-9_-]{11})/gi);
         if (!urls) {
-            await sock.sendMessage(chatId, { text: 'This is not a valid YouTube link!' }, { quoted: message });
+            await sendStyled(sock, chatId, message, {
+                title: 'VIDEO',
+                lines: ['This is not a valid YouTube link.']
+            });
             return;
         }
 
@@ -170,9 +181,10 @@ async function videoCommand(sock, chatId, message) {
             errorMessage = '❌ Download failed: ' + error.message;
         }
         
-        await sock.sendMessage(chatId, { 
-            text: errorMessage 
-        }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'VIDEO',
+            lines: [errorMessage.replace(/[❌]/g, '').trim()]
+        });
     }
 }
 

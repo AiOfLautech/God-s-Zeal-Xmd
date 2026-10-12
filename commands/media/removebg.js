@@ -1,4 +1,6 @@
 const { downloadMediaMessage } = require('@whiskeysockets/baileys');
+const { sendStyled } = require('../../lib/menuLayout');
+const { getPrefix } = require('../../lib/botConfig');
 
 async function removebgCommand(sock, chatId, message) {
     const quotedInfo = message.message?.extendedTextMessage?.contextInfo;
@@ -16,9 +18,10 @@ async function removebgCommand(sock, chatId, message) {
 
     const hasImage = !!targetMessage.message?.imageMessage;
     if (!hasImage) {
-        await sock.sendMessage(chatId, {
-            text: 'Reply to an image with .removebg to use this feature.'
-        }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'REMOVEBG',
+            lines: [`Reply to an image with ${getPrefix()}removebg.`]
+        });
         return;
     }
 
@@ -28,14 +31,16 @@ async function removebgCommand(sock, chatId, message) {
             reuploadRequest: sock.updateMediaMessage
         });
 
-        await sock.sendMessage(chatId, {
-            text: 'Remove background is not configured yet. Add your API integration to enable it.'
-        }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'REMOVEBG',
+            lines: ['Remove background is not configured yet.']
+        });
     } catch (error) {
         console.error('Error in removebg command:', error);
-        await sock.sendMessage(chatId, {
-            text: 'Failed to process the image for background removal.'
-        }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'REMOVEBG',
+            lines: ['Failed to process the image for background removal.']
+        });
     }
 }
 

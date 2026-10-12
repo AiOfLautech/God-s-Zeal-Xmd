@@ -1,23 +1,22 @@
 const fetch = require('node-fetch');
+const { sendStyled } = require('../../lib/menuLayout');
 
 async function flirtCommand(sock, chatId, message) {
     try {
-        const shizokeys = 'shizo';
-        const res = await fetch(`https://shizoapi.onrender.com/api/texts/flirt?apikey=${shizokeys}`);
-        
-        if (!res.ok) {
-            throw await res.text();
-        }
-        
+        const res = await fetch('https://shizoapi.onrender.com/api/texts/flirt?apikey=shizo');
+        if (!res.ok) throw await res.text();
         const json = await res.json();
-        const flirtMessage = json.result;
-
-        // Send the flirt message
-        await sock.sendMessage(chatId, { text: flirtMessage }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'FLIRT',
+            lines: [json.result || 'You already know.']
+        });
     } catch (error) {
         console.error('Error in flirt command:', error);
-        await sock.sendMessage(chatId, { text: '❌ Failed to get flirt message. Please try again later!' }, { quoted: message });
+        await sendStyled(sock, chatId, message, {
+            title: 'FLIRT',
+            lines: ['Failed to get flirt message. Please try again later.']
+        });
     }
 }
 
-module.exports = { flirtCommand }; 
+module.exports = { flirtCommand };

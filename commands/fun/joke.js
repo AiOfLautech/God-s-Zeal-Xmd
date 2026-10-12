@@ -1,15 +1,22 @@
 const axios = require('axios');
+const { sendStyled } = require('../../lib/menuLayout');
 
-module.exports = async function (sock, chatId) {
+module.exports = async function (sock, chatId, message) {
     try {
         const response = await axios.get('https://icanhazdadjoke.com/', {
-            headers: { Accept: 'application/json' }
+            headers: { Accept: 'application/json' },
+            timeout: 10000
         });
         const joke = response.data.joke;
-        await sock.sendMessage(chatId, { text: joke });
+        await sendStyled(sock, chatId, message, {
+            title: 'JOKE',
+            lines: [joke]
+        });
     } catch (error) {
         console.error('Error fetching joke:', error);
-        await sock.sendMessage(chatId, { text: 'Sorry, I could not fetch a joke right now.' });
+        await sendStyled(sock, chatId, message, {
+            title: 'JOKE',
+            lines: ['Sorry, I could not fetch a joke right now.']
+        });
     }
 };
-

@@ -1,6 +1,7 @@
 ﻿const fs = require('fs');
 const path = require('path');
 const isAdmin = require('../../lib/isAdmin');
+const { sendStyled } = require('../../lib/menuLayout');
 
 // Define paths
 const databaseDir = path.join(process.cwd(), 'data');
@@ -26,8 +27,9 @@ async function warnCommand(sock, chatId, senderId, mentionedJids, message) {
 
         // First check if it's a group
         if (!chatId.endsWith('@g.us')) {
-            await sock.sendMessage(chatId, { 
-                text: 'This command can only be used in groups!'
+            await sendStyled(sock, chatId, message, {
+                title: 'WARN',
+                lines: ['This command can only be used in groups.']
             });
             return;
         }
@@ -37,22 +39,25 @@ async function warnCommand(sock, chatId, senderId, mentionedJids, message) {
             const { isSenderAdmin, isBotAdmin } = await isAdmin(sock, chatId, senderId);
             
             if (!isBotAdmin) {
-                await sock.sendMessage(chatId, { 
-                    text: '❌ Error: Please make the bot an admin first to use this command.'
+                await sendStyled(sock, chatId, message, {
+                    title: 'WARN',
+                    lines: ['Please make the bot an admin first.']
                 });
                 return;
             }
 
             if (!isSenderAdmin) {
-                await sock.sendMessage(chatId, { 
-                    text: '❌ Error: Only group admins can use the warn command.'
+                await sendStyled(sock, chatId, message, {
+                    title: 'WARN',
+                    lines: ['Only group admins can use the warn command.']
                 });
                 return;
             }
         } catch (adminError) {
             console.error('Error checking admin status:', adminError);
-            await sock.sendMessage(chatId, { 
-                text: '❌ Error: Please make sure the bot is an admin of this group.'
+            await sendStyled(sock, chatId, message, {
+                title: 'WARN',
+                lines: ['Please make sure the bot is an admin of this group.']
             });
             return;
         }
@@ -69,8 +74,9 @@ async function warnCommand(sock, chatId, senderId, mentionedJids, message) {
         }
         
         if (!userToWarn) {
-            await sock.sendMessage(chatId, { 
-                text: '❌ Error: Please mention the user or reply to their message to warn!'
+            await sendStyled(sock, chatId, message, {
+                title: 'WARN',
+                lines: ['Mention the user or reply to their message.']
             });
             return;
         }
@@ -100,10 +106,18 @@ async function warnCommand(sock, chatId, senderId, mentionedJids, message) {
                 `👑 *Warned By:* @${senderId.split('@')[0]}\n\n` +
                 `🗓️ *Date:* ${new Date().toLocaleString()}`;
 
-            await sock.sendMessage(chatId, { 
+            await sendStyled(sock, chatId, message, {
+                title: 'WARN',
+                lines: [
+                    `User ☇ @${userToWarn.split('@')[0]}`,
+                    `Count ☇ ${warnings[chatId][userToWarn]}/3`,
+                    `By ☇ @${senderId.split('@')[0]}`
+                ]
+            });
+            await sock.sendMessage(chatId, {
                 text: warningMessage,
                 mentions: [userToWarn, senderId]
-            });
+            }).catch(() => {});
 
             // Auto-kick after 3 warnings
             if (warnings[chatId][userToWarn] >= 3) {

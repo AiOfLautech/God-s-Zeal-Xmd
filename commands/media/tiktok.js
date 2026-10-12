@@ -1,5 +1,7 @@
 const { ttdl } = require("ruhend-scraper");
 const axios = require('axios');
+const { sendStyled } = require('../../lib/menuLayout');
+const { getPrefix } = require('../../lib/botConfig');
 
 // Store processed message IDs to prevent duplicates
 const processedMessages = new Set();
@@ -22,18 +24,22 @@ async function tiktokCommand(sock, chatId, message) {
         const text = message.message?.conversation || message.message?.extendedTextMessage?.text;
         
         if (!text) {
-            return await sock.sendMessage(chatId, { 
-                text: "Please provide a TikTok link for the video."
+            await sendStyled(sock, chatId, message, {
+                title: 'TIKTOK',
+                lines: [`Usage ☇ ${getPrefix()}tiktok <link>`]
             });
+            return;
         }
 
         // Extract URL from command
         const url = text.split(' ').slice(1).join(' ').trim();
         
         if (!url) {
-            return await sock.sendMessage(chatId, { 
-                text: "Please provide a TikTok link for the video."
+            await sendStyled(sock, chatId, message, {
+                title: 'TIKTOK',
+                lines: [`Usage ☇ ${getPrefix()}tiktok <link>`]
             });
+            return;
         }
 
         // Check for various TikTok URL formats
@@ -48,9 +54,11 @@ async function tiktokCommand(sock, chatId, message) {
         const isValidUrl = tiktokPatterns.some(pattern => pattern.test(url));
         
         if (!isValidUrl) {
-            return await sock.sendMessage(chatId, { 
-                text: "That is not a valid TikTok link. Please provide a valid TikTok video link."
+            await sendStyled(sock, chatId, message, {
+                title: 'TIKTOK',
+                lines: ['That is not a valid TikTok link.']
             });
+            return;
         }
 
         await sock.sendMessage(chatId, {
