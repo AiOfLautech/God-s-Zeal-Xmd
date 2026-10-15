@@ -46,6 +46,8 @@ const readline = require("readline")
 const { rmSync, existsSync } = require('fs')
 const { join } = require('path')
 const { initializeMongoStore, storeAutoTargets } = require('./lib/mongoStore')
+const { syncTelegram } = require('./lib/telegramBot')
+const { syncWebPair } = require('./lib/webPair')
 
 function liveConfig() {
     return getConfig()
@@ -729,6 +731,16 @@ startGodszealBotInc()
         } catch (error) {
             console.error('Failed to restore extra sessions:', error.message)
         }
+        try {
+            syncTelegram()
+        } catch (error) {
+            console.error('Failed to start Telegram bot:', error.message)
+        }
+        try {
+            syncWebPair()
+        } catch (error) {
+            console.error('Failed to start web pair page:', error.message)
+        }
     })
     .catch(error => {
         console.error('Fatal error:', error)
@@ -740,6 +752,15 @@ process.on('uncaughtException', (err) => {
 
 process.on('unhandledRejection', (err) => {
     console.error('Unhandled Rejection:', err)
+})
+
+let integrationResyncTimer = null
+fs.watchFile(join(process.cwd(), 'bot.json'), () => {
+    if (integrationResyncTimer) clearTimeout(integrationResyncTimer)
+    integrationResyncTimer = setTimeout(() => {
+        try { syncTelegram() } catch (error) { console.error('Telegram resync failed:', error.message) }
+        try { syncWebPair() } catch (error) { console.error('Web pair resync failed:', error.message) }
+    }, 700)
 })
 
 let file = require.resolve(__filename)

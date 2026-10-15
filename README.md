@@ -95,6 +95,63 @@
 
 </details>
 
+<details>
+  <summary><strong>Telegram bot and web pair page</strong></summary>
+  <br/>
+
+  Both integrations are driven by `bot.json` and reload automatically. They are off by default.
+
+  ```json
+  "telegram": {
+    "enabled": false,
+    "token": "",
+    "botName": "GODS ZEAL XMD",
+    "sendImage": true,
+    "forceJoin": false,
+    "adminChatIds": [],
+    "channels": []
+  },
+  "webPair": {
+    "enabled": false,
+    "port": 3000,
+    "forceJoin": false,
+    "publicUrl": ""
+  }
+  ```
+
+  1. Create a bot with BotFather, copy the token into `telegram.token`, set `telegram.enabled` to `true`.
+  2. Talk to your bot, send `/id`, then add that chat id to `telegram.adminChatIds` (or run `/addadmin <chatId>`).
+  3. Admins add channels and groups with `/addchannel` and `/addgroup`. Both accept an `@username`, a numeric id, or a `t.me` link.
+  4. Turn the forced join gate on with `/toggle join on`. Users must join every entry before `/pair` works. The bot must be an admin in each channel/group for the check to run.
+  5. Set `webPair.enabled` to `true` to serve the pair page at `http://localhost:<port>`.
+
+  Telegram commands:
+
+  | Command | Purpose |
+  |---------|---------|
+  | `/start` `/help` `/menu` | Welcome card with buttons, sent with the bot image |
+  | `/pair <number>` | Start an isolated session, returns the pairing code |
+  | `/channels` | List channels and groups with join buttons |
+  | `/id` | Show your Telegram chat id |
+  | `/status` | Show session status |
+  | `/addchannel` `/addgroup` `/removechannel` | Admin: manage the join list |
+  | `/admins` `/addadmin` `/deladmin` | Admin: manage Telegram admins |
+  | `/toggle` | Admin: flip toggles from inline buttons |
+
+  Toggles shared by Telegram and the web page:
+
+  | Key | Controls |
+  |-----|----------|
+  | `telegram` | Telegram bot on/off |
+  | `join` | Telegram forced join gate |
+  | `image` | Send the bot image with messages |
+  | `pair` | Web pair page on/off |
+  | `pairjoin` | Web forced join gate |
+
+  The web page reads `/api/state`, pairs through `/api/pair`, and flips switches through `/api/toggle`.
+
+</details>
+
 ---
 
 ## Deploy

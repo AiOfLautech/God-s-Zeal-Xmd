@@ -22,7 +22,15 @@
   "newsletterUrl": "https://whatsapp.com/channel/0029VaXKAEoKmCPS6Jz7sw0N",
   "youtubeUrl": "https://youtube.com/@Godszealtech",
   "supportGroup": "https://chat.whatsapp.com/GA4WrOFythU6g3BFVubYM7?mode=wwt",
-  "telegram": "https://t.me/aitoolshub01",
+  "telegram": {
+    "enabled": false,
+    "token": "",
+    "botName": "GODS ZEAL XMD",
+    "sendImage": true,
+    "forceJoin": false,
+    "adminChatIds": [],
+    "channels": []
+  },
   "menuStyle": "button",
   "menuStyles": [
     "button",
@@ -60,6 +68,12 @@
   "mongoDbName": "gods_zeal_xmd",
   "mongoEncryptionKey": "",
   "pairApiBase": "",
+  "webPair": {
+    "enabled": false,
+    "port": 3000,
+    "forceJoin": false,
+    "publicUrl": ""
+  },
   "_instructions": "Edit values only. Do not rename keys. The bot reloads this file automatically. Set botImageUrl or menuImage to a direct image URL for the menu photo. If both are empty, assets/bot_image.jpg is used.",
   "botOwner": "Gods Zeal †",
   "ownerNumber": "2349074488015",

@@ -12,7 +12,7 @@
     "start:fresh": "npm run reset-session && npm start",
     "install:panel": "npm install --legacy-peer-deps",
     "install:force": "npm install --force",
-    "test": "node --check index.js && node --check main.js && node --check settings.js && node --check lib/botConfig.js && node --check lib/menuLayout.js && node --check lib/sessionManager.js && node --check commands/general/help.js && node --check commands/general/pair.js && node --check commands/owner/setprefix.js && node --check commands/owner/setmenu.js",
+    "test": "node --check index.js && node --check main.js && node --check settings.js && node --check lib/botConfig.js && node --check lib/menuLayout.js && node --check lib/sessionManager.js && node --check lib/telegramBot.js && node --check lib/webPair.js && node --check lib/toggles.js && node --check commands/general/help.js && node --check commands/general/pair.js && node --check commands/owner/setprefix.js && node --check commands/owner/setmenu.js",
     "docker:build": "docker build -t docker run -e SESSION_ID=$SESSION_ID knightbot"
   },
   "keywords": [
@@ -51,6 +51,7 @@
     "node-cache": "^5.1.2",
     "node-fetch": "^2.7.0",
     "node-id3": "^0.2.3",
+    "node-telegram-bot-api": "^2.1.0",
     "node-webpmux": "^3.1.0",
     "node-youtube-music": "^0.8.3",
     "performance-now": "^2.1.0",
